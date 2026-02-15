@@ -1,0 +1,539 @@
+;
+; This file contains the program defines for the optional NVision commands.
+;
+#define nVision  COMCALLBACK 10001
+#define NVISION  nVision
+#define nvision  nVision
+#define NVision  nVision
+
+;************ General
+#define  ShownVisionServer      1001
+#define  HidenVisionServer      1002
+#define  LoadnVisionServer      1003
+#define  EndnVisionServer       1004
+#define  nVisionGenericCommand  1005 ;(long)command, (string)parameter-(Single string multiple parameters with comma as delimiter)
+#define  ClearErrorCode         1006
+#define  GetErrorCode           1007
+#define  SetErrorCode           1008
+#define  SetExportError         1009 ;(long)1=Yes;0=No
+
+;************ Image
+#define  LoadImageFromFile  1010 ;(String)FullPathFileName, (Long)Buffer
+#define  SaveImageToFile    1011 ;(String)FullPathFileName, (Long)Buffer
+#define  SetCameraBuffer    1012 ;(Long)Camera, (Long)Buffer
+#define  TakeSnapShotImage  1013
+#define  StartLiveImage     1014
+#define  StopLiveImage      1015
+#define  SetDisplayBuffer   1016 ;(Long)Buffer, (Long 0,1)IfShowChild
+
+#define  ClearAnnotation    1030
+#define  DrawTwoPointLine   1031 ;(Double)x1,y1,x2,y2,(long)color,DrawThick
+#define  DrawAngleLine      1032 ;(Double)x,y,length,angle,(long)color,DrawThick
+#define  DrawArc            1033 ;(Double)CenterX,Y,Radius,StartAngle,EndAngle,(long)color,DrawThick
+#define  DrawTwoPointArc    1034 ;(Double)CenterX,Y,Radius,StartX,Y,EndX,Y,(long)color,DrawThick
+#define  DrawDot            1035 ;(Double)X,Y,(long)color,DrawThick
+#define  DrawCross          1036 ;(Double)CenterX,Y,Size,(long)color,DrawThick
+#define  DrawRectangle      1037 ;(Double)MinX,Y,MaxX,Y,(long)color,DrawThick
+#define  DrawText           1038 ;(Double)PositionX,Y,(string)text,(long)color,DrawThick
+
+'**************** Math Function
+#define  FormulateTwoPointLine      1050 ;(Double)x1,y1,x2,y2,(long)LineIndex
+#define  FormulatePointAngleLine    1051 ;(Double)x0,y0,angle,(long)LineIndex
+#define  GetLineCoefficientA        1052 ;(long)LineIndex; = (double)A
+#define  GetLineCoefficientB        1053 ;(long)LineIndex; = (double)B
+#define  GetLineCoefficientC        1054 ;(long)LineIndex; = (double)C
+#define  GetLineAngle               1055 ;(long)LineIndex; = (double)Angle
+#define  GetLineLength              1056 ;(long)LineIndex; = (double)length
+#define  SetPerpendicularLine       1057 ;(Double)A1,B1,C1,x0,y0,(long)LineIndex
+#define  SetParallelLineByPoint     1058 ;(Double)A1,B1,C1,x0,y0,(long)LineIndex
+#define  SetParallelLineByDistance  1059 ;(Double)A1,B1,C1,distance,(long)LineIndex
+
+#define  FormulateThreePointArc     1060 ;(Double)x1,y1,x2,y2,x3,y3,(long)ArcIndex
+#define  GetArcCenterX              1061 ;(long)ArcIndex; = (Double)CenterX
+#define  GetArcCenterY              1062 ;(long)ArcIndex; = (Double)CenterY
+#define  GetArcRadius               1063 ;(long)ArcIndex; = (Double)Radius
+#define  GetArcStartAngle           1064 ;(long)ArcIndex; = (Double)StartAngle
+#define  GetArcEndAngle             1065 ;(long)ArcIndex; = (Double)EndAngle
+#define  GetArcAngle                1066 ;(long)ArcIndex; = (Double)Angle
+#define  GetArcDirection            1067 ;(long)ArcIndex; = (Double)Direction
+
+#define  ComputeTwoLineIntersect     1070 ;(Double)A1,B1,C1,A2,B2,C2,(long)PointIndex
+#define  ComputeCircleLineIntersect  1071 ;(Double)CenterX,Y,Radius,A1,B1,C1,(long)PointIndex
+#define  GetInterceptPointX          1072 ;(long)PointIndex; = X
+#define  GetInterceptPointY          1073 ;(long)PointIndex; = Y
+#define  GetInterceptPointX2         1074 ;(long)PointIndex; = X2
+#define  GetInterceptPointY2         1075 ;(long)PointIndex; = Y2
+
+#define  GetLineResultAll            1080 ;(long)LineIndex; = (String of doubles)A,B,C,Angle,Length
+#define  GetArcResultAll             1081 ;(long)ArcIndex; = (String of doubles)CenterX,Y,Radius,StarAngle,EndAngle,Angle,Direction
+#define  GetPointResultAll           1082 ;(long)PointIndex; = (String of doubles)Point1X,Y,Point2X,Y
+
+;**************** ROI Setting
+#define  ShowRoiPropertyDialog  1101
+#define  HideRoiPropertyDialog  1102
+#define  LoadRoiProperty        1103
+#define  EndRoiProperty         1104
+
+#define  ShowRoi                1105 ;(Long)RoiId
+#define  HideRoi                1106 ;(Long)RoiId
+#define  SetRoi                 1107 ;(Long)RoiId,(Long)X,Y,W,H,(Double)Angle,(Long 0,1)CanRotate,AutoEnclosure,ShowEnclosure,(Long)Color
+#define  SetRoiX                1108 ;(Long)RoiId,(Long)X
+#define  SetRoiY                1109 ;(Long)RoiId,(Long)Y
+#define  SetRoiWidth            1110 ;(Long)RoiId,(Long)Width
+#define  SetRoiHeight           1111 ;(Long)RoiId,(Long)Height
+#define  SetRoiAngle            1112 ;(Long)RoiId,(Double)Angle
+#define  SetRoiCanRotate        1113 ;(Long)RoiId,(Long 0,1)CanRotate
+#define  SetRoiAutoEnclosure    1114 ;(Long)RoiId,(Long 0,1)AutoEnclosure
+#define  SetRoiShowEnclosure    1115 ;(Long)RoiId,(Long 0,1)ShowEnclosure
+#define  SetRoiColor            1116 ;(Long)RoiId,(Long)Color
+
+#define  GetRoiX                1117 ;(Long)RoiId; = (Long)X
+#define  GetRoiY                1118 ;(Long)RoiId; = (Long)Y
+#define  GetRoiWidth            1119 ;(Long)RoiId; = (Long)Width
+#define  GetRoiHeight           1120 ;(Long)RoiId; = (Long)Height
+#define  GetRoiAngle            1121 ;(Long)RoiId; = (Double)Angle
+#define  GetRoiCanRotate        1122 ;(Long)RoiId; = (Long 0,1)CanRotate
+#define  GetRoiAutoEnclosure    1123 ;(Long)RoiId; = (Long 0,1)AutoEnclosure
+#define  GetRoiShowEnclosure    1124 ;(Long)RoiId; = (Long 0,1)ShowEnclosure
+#define  GetRoiColor            1125 ;(Long)RoiId; = (Long)Color
+
+#define  ShowBoxRoi             1126
+#define  HideBoxRoi             1127 
+#define  SetBoxRoi              1128 ;(Long)Left,top,width,height
+
+#define  ShowLineRoi            1129
+#define  HideLineRoi            1130
+#define  SetLineRoi             1131 ;(Long)x1,y1,x2,y2
+
+#define  ShowReference          1132
+#define  HideReference          1133
+#define  SetReference           1134 ;(Long)x,y,w,h,(double)angle
+
+#define  ShowTarget             1135
+#define  HideTarget             1136
+#define  SetTarget              1137 ;(Long)X,Y
+
+#define  GetBoxRoiLeft          1138 ; = (long)Left
+#define  GetBoxRoiTop           1139 ; = (long)Top
+#define  GetBoxRoiWidth         1140 ; = (long)Width
+#define  GetBoxRoiHeight        1141 ; = (long)Height
+
+#define  GetLineRoiX1           1142 ; = (long)X1
+#define  GetLineRoiY1           1143 ; = (long)Y1
+#define  GetLineRoiX2           1144 ; = (long)X2
+#define  GetLineRoiY2           1145 ; = (long)Y2
+#define  GetLineRoiLength       1146 ; = (double)Length
+
+#define  GetTargetX             1147 ; = (long)X
+#define  GetTargetY             1148 ; = (long)Y
+#define  GetTargetSize          1149 ; = (long)Size
+
+#define  EditRoi                1150 ;(Long)RoiId
+#define  CopyRoi                1151 ;(Long)FromThis,ToThat
+#define  LoadRoi                1152 ;(Long)RoiId,(string)FileName
+#define  SaveRoi                1153 ;(Long)RoiId,(string)FileName
+
+;************ Histagram
+#define  ShowHistogramDialog      1201
+#define  HideHistogramDialog      1202
+#define  LoadHistogram            1203
+#define  EndHistogram             1204
+
+#define  ReadHistogramConfigFile               1205 ;(String)FullPathFileName.hsc
+#define  GetHistogram                          1206
+#define  GetHistogramResult                    1207 ;(Long)GrayLevel; = (Long)PixelCount
+#define  GetHistogramMaxGrayLevel              1208 ; = (Long)MaxGrayLevel
+#define  GetHistogramMinGrayLevel              1209 ; = (Long)MinGrayLevel
+#define  GetHistogramGrayLevelByDarkPixelCount 1210 ;(Double)DarkPixelCount or % of TotalPixelCount; = (Long)GrayLevel
+
+;************ Thresholding
+#define  ShowThresholdingDialog      1301
+#define  HideThresholdingDialog      1302
+#define  LoadThresholding            1303
+#define  EndThresholding             1304
+
+#define  ReadThresholdingConfigFile  1305 ;(String)FullPathFileName.thc
+#define  SetThreshold                1306 ;(Long)Threshold
+#define  GetThreshold                1307 ; = (long)Threshold
+#define  BinarizeImage               1308
+#define  BinarizeImageWithThreshold  1309 ;(Double)Threshold
+
+;*************** Pattern Match
+#define  ShowPatternMatchDialog           1401
+#define  HidePatternMatchDialog           1402
+#define  LoadPatternMatch                 1403
+#define  EndPatternMatch                  1404
+
+#define  ReadPatternMatchConfigFile       1405 ;(string)FullPathFileName.pmc
+#define  GetPatternMatchCount             1406 ;(long)ModelID; = (string)Count
+#define  GetPatternMatchPositionAndScore  1407 ;(long)ResultIndex,(long)ResultCode; = (string)Result
+#define  GetPatternMatchModelInfo         1408 ;(long)ModelID, (long)InfoID; = (string)Result
+#define  GetPatternMatchModelCount        1409 ;= (string)ModelCount
+#define  ReadPatternMatchConfigInfo       1410 ;(string)FullPathFileName.pmc
+#define  ChangePatternMatchControl        1411 ;(long)ControlIndex
+
+;following are Pattern Match Result code constants used with GetPatternMatchPositionAndScore
+#define  PatternResultAll                 1430
+#define  PatternResultPositionX           1431
+#define  PatternResultPositionY           1432
+#define  PatternResultAngle               1433
+#define  PatternResultPatternName         1434
+#define  PatternResultScore               1435
+#define  PatternResultPatternIndex        1436
+
+;following are Pattern Model Info code constants used with GetPatternMatchModelInfo         
+#define  PatternModelSizeX                1441
+#define  PatternModelSizeY                1442
+
+;************* Blob Analysis
+#define  ShowBlobAnalysisDialog          1501
+#define  HideBlobAnalysisDialog          1502
+#define  LoadBlobAnalysis                1503
+#define  EndBlobAnalysis                 1504
+
+#define  ReadBlobAnalysisConfigFile      1505 ;(string)FullPathFileName.bac
+#define  SetBlobAnalysisBinaryThreshold  1506 ;(Long)Threshold
+#define  GetBlobAnalysisBinaryThreshold  1507 ; = (string)Threshold
+
+#define  GetBlobAnalysisCount                1508 ; = (string)ResultCount
+#define  GetBlobAnalysisResultByFeatureName  1509 ;(Long)ResultIndex,(String)FeatureName; = (String)Result
+#define  GetBlobAnalysisFeatureCount         1510 ; = (string)FeatureCount
+#define  GetBlobAnalysisResultByResultGrid   1511 ;(Long)ResultIndex,(Long)GridColumn; = (String)Result
+#define  ReadBlobAnalysisConfigInfo          1512 ;(string)FullPathFileName.bac
+#define  ChangeBlobAnalysisControl           1513 ;(long)ControlIndex
+
+;following are Blob Feature Names used with GetBlobAnalysisResultByFeatureName
+#define  BlobFeatureNameArea                 "Area"
+#define  BlobFeatureNameBoxMaxX              "Box Max. X"
+#define  BlobFeatureNameBoxMaxY              "Box Max. Y"
+#define  BlobFeatureNameBoxMinX              "Box Min. X"
+#define  BlobFeatureNameBoxMinY              "Box Min. Y"
+#define  BlobFeatureNameBreadth              "Breadth"
+#define  BlobFeatureNameCentroidXBin         "Centroid X (Bin.)"
+#define  BlobFeatureNameCentroidXGray        "Centroid X (Gray)"
+#define  BlobFeatureNameCentroidYBin         "Centroid Y (Bin.)"
+#define  BlobFeatureNameCentroidYGray        "Centroid Y (Gray)"
+#define  BlobFeatureNameCompactness          "Compactness"
+#define  BlobFeatureNameConvexPerimeter      "Convex Perimeter"
+#define  BlobFeatureNameElongation           "Elongation"
+#define  BlobFeatureNameEulerNumber          "Euler Number"
+#define  BlobFeatureNameFeretElongation      "Feret Elongation"
+#define  BlobFeatureNameFeretMaxAngle        "Feret Max. Angle"
+#define  BlobFeatureNameFeretMaxDiam         "Feret Max. Diam."
+#define  BlobFeatureNameFeretMeanDiam        "Feret Mean Diam."
+#define  BlobFeatureNameFeretMinAngle        "Feret Min. Angle"
+#define  BlobFeatureNameFeretMinDiam         "Feret Min. Diam."
+#define  BlobFeatureNameFeretX               "Feret X"
+#define  BlobFeatureNameFeretY               "Feret Y"
+#define  BlobFeatureNameFirstPointX          "First Point X"
+#define  BlobFeatureNameFirstPointY          "First Point Y"
+#define  BlobFeatureNameIntercept0           "Intercept 0"
+#define  BlobFeatureNameIntercept135         "Intercept 135"
+#define  BlobFeatureNameIntercept45          "Intercept 45"
+#define  BlobFeatureNameIntercept90          "Intercept 90"
+#define  BlobFeatureNameLength               "Length"
+#define  BlobFeatureNameMaxPixel             "Max. Pixel"
+#define  BlobFeatureNameMeanPixel            "Mean Pixel"
+#define  BlobFeatureNameMinPixel             "Min. Pixel"
+#define  BlobFeatureNameMomCentX0Y2Bin       "Mom. Cent. X0, Y2 (Bin.)"
+#define  BlobFeatureNameMomCentX0Y2Gray      "Mom. Cent. X0, Y2 (Gray)"
+#define  BlobFeatureNameMomCentX1Y1Bin       "Mom. Cent. X1, Y1 (Bin.)"
+#define  BlobFeatureNameMomCentX1Y1Gray      "Mom. Cent. X1, Y1 (Gray)"
+#define  BlobFeatureNameMomCentX2Y0Bin       "Mom. Cent. X2, Y0 (Bin.)"
+#define  BlobFeatureNameMomCentX2Y0Gray      "Mom. Cent. X2, Y0 (Gray)"
+#define  BlobFeatureNameMomentX0Y1Bin        "Moment X0, Y1 (Bin.)"
+#define  BlobFeatureNameMomentX0Y1Gray       "Moment X0, Y1 (Gray)"
+#define  BlobFeatureNameMomentX0Y2Bin        "Moment X0, Y2 (Bin.)"
+#define  BlobFeatureNameMomentX0Y2Gray       "Moment X0, Y2 (Gray)"
+#define  BlobFeatureNameMomentX1Y0Bin        "Moment X1, Y0 (Bin.)"
+#define  BlobFeatureNameMomentX1Y0Gray       "Moment X1, Y0 (Gray)"
+#define  BlobFeatureNameMomentX1Y1Bin        "Moment X1, Y1 (Bin.)"
+#define  BlobFeatureNameMomentX1Y1Gray       "Moment X1, Y1 (Gray)"
+#define  BlobFeatureNameMomentX2Y0Bin        "Moment X2, Y0 (Bin.)"
+#define  BlobFeatureNameMomentX2Y0Gray       "Moment X2, Y0 (Gray)"
+#define  BlobFeatureNameNumberOfHoles        "Number of Holes"
+#define  BlobFeatureNameNumberOfRuns         "Number of Runs"
+#define  BlobFeatureNamePerimeter            "Perimeter"
+#define  BlobFeatureNamePrincipalAxisBin     "Principal Axis (Bin.)"
+#define  BlobFeatureNamePrincipalAxisGray    "Principal Axis (Gray)"
+#define  BlobFeatureNameRoughness            "Roughness"
+#define  BlobFeatureNameSecondaryAxisBin     "Secondary Axis (Bin.)"
+#define  BlobFeatureNameSecondaryAxisGray    "Secondary Axis (Gray)"
+#define  BlobFeatureNameStdDevOfPixels       "Std. Dev. of Pixels"
+#define  BlobFeatureNameSumOfPixels          "Sum of Pixels"
+#define  BlobFeatureNameSumOfSquOfPixels     "Sum of Squ. of Pixels"
+#define  BlobFeatureNameXMaxAtYMax           "X Max. at Y Max."
+#define  BlobFeatureNameXMinAtYMin           "X Min. at Y Min."
+#define  BlobFeatureNameYMaxAtXMin           "Y Max. at X Min."
+#define  BlobFeatureNameYMinAtXMax           "Y Min. at X Max."
+
+;following are Blob Feature codes used with GetBlobAnalysisResultByFeatureName as a interchangeable (an alternate) of FeatureName
+#define  BlobFeatureArea                 "1530"
+#define  BlobFeatureBoxMaxX              "1531"
+#define  BlobFeatureBoxMaxY              "1532"
+#define  BlobFeatureBoxMinX              "1533"
+#define  BlobFeatureBoxMinY              "1534"
+#define  BlobFeatureBreadth              "1535"
+#define  BlobFeatureCentroidXBin         "1536"
+#define  BlobFeatureCentroidXGray        "1537"
+#define  BlobFeatureCentroidYBin         "1538"
+#define  BlobFeatureCentroidYGray        "1539"
+#define  BlobFeatureCompactness          "1540"
+#define  BlobFeatureConvexPerimeter      "1541"
+#define  BlobFeatureElongation           "1542"
+#define  BlobFeatureEulerNumber          "1543"
+#define  BlobFeatureFeretElongation      "1544"
+#define  BlobFeatureFeretMaxAngle        "1545"
+#define  BlobFeatureFeretMaxDiam         "1546"
+#define  BlobFeatureFeretMeanDiam        "1547"
+#define  BlobFeatureFeretMinAngle        "1548"
+#define  BlobFeatureFeretMinDiam         "1549"
+#define  BlobFeatureFeretX               "1550"
+#define  BlobFeatureFeretY               "1551"
+#define  BlobFeatureFirstPointX          "1552"
+#define  BlobFeatureFirstPointY          "1553"
+#define  BlobFeatureIntercept0           "1554"
+#define  BlobFeatureIntercept135         "1555"
+#define  BlobFeatureIntercept45          "1556"
+#define  BlobFeatureIntercept90          "1557"
+#define  BlobFeatureLength               "1558"
+#define  BlobFeatureMaxPixel             "1559"
+#define  BlobFeatureMeanPixel            "1560"
+#define  BlobFeatureMinPixel             "1561"
+#define  BlobFeatureMomCentX0Y2Bin       "1562"
+#define  BlobFeatureMomCentX0Y2Gray      "1563"
+#define  BlobFeatureMomCentX1Y1Bin       "1564"
+#define  BlobFeatureMomCentX1Y1Gray      "1565"
+#define  BlobFeatureMomCentX2Y0Bin       "1566"
+#define  BlobFeatureMomCentX2Y0Gray      "1567"
+#define  BlobFeatureMomentX0Y1Bin        "1568"
+#define  BlobFeatureMomentX0Y1Gray       "1569"
+#define  BlobFeatureMomentX0Y2Bin        "1570"
+#define  BlobFeatureMomentX0Y2Gray       "1571"
+#define  BlobFeatureMomentX1Y0Bin        "1572"
+#define  BlobFeatureMomentX1Y0Gray       "1573"
+#define  BlobFeatureMomentX1Y1Bin        "1574"
+#define  BlobFeatureMomentX1Y1Gray       "1575"
+#define  BlobFeatureMomentX2Y0Bin        "1576"
+#define  BlobFeatureMomentX2Y0Gray       "1577"
+#define  BlobFeatureNumberOfHoles        "1578"
+#define  BlobFeatureNumberOfRuns         "1579"
+#define  BlobFeaturePerimeter            "1580"
+#define  BlobFeaturePrincipalAxisBin     "1581"
+#define  BlobFeaturePrincipalAxisGray    "1582"
+#define  BlobFeatureRoughness            "1583"
+#define  BlobFeatureSecondaryAxisBin     "1584"
+#define  BlobFeatureSecondaryAxisGray    "1585"
+#define  BlobFeatureStdDevOfPixels       "1586"
+#define  BlobFeatureSumOfPixels          "1587"
+#define  BlobFeatureSumOfSquOfPixels     "1588"
+#define  BlobFeatureXMaxAtYMax           "1589"
+#define  BlobFeatureXMinAtYMin           "1590"
+#define  BlobFeatureYMaxAtXMin           "1591"
+#define  BlobFeatureYMinAtXMax           "1592"
+
+;************* Edge Detection
+#define  ShowEdgeDetectDialog            1601
+#define  HideEdgeDetectDialog            1602
+#define  LoadEdgeDetect                  1603
+#define  EndEdgeDetect                   1604
+
+#define  ReadEdgeDetectConfigFile        1605 ;(String)FullPathFIleName.edc
+#define  SelectEdgeDetectMarker          1606 ;(long)marker
+#define  GetEdgeDetectCount              1607 ;= (string)ResultCount
+#define  GetEdgeDetectResult             1608 ;(Long)ResultIndex,(long)ResultCode; = (String)Result
+#define  GetEdgeDetectMarkerCount        1609 ;= (string)MarkerCount
+#define  SetEdgeDetectMarkerOccurrences  1610 ;(long)Occurrences, (long)MarkerID
+#define  GetEdgeDetectMarkerOccurrences  1611 ;(long)MarkerID; = (string)Occurrences
+#define  LabelEdge                       1612 ;(long)EdgeID, (String)Label
+
+;following are Edge Detection Result code constants used with GetEdgeDetectResult       
+#define  EdgeResultAll             1630
+#define  EdgeResultMarkerID        1631
+#define  EdgeResultMarkerName      1632
+#define  EdgeResultPositionX       1633
+#define  EdgeResultPositionY       1634
+#define  EdgeResultAngle           1635
+
+;*********** Line Profile
+#define  ShowLineProfileDialog          1701
+#define  HideLineProfileDialog          1702
+#define  LoadLineProfile                1703
+#define  EndLineProfile                 1704
+
+#define  ReadLineProfileConfigFile      1705 ;(string)FullPathFileName.lpc
+#define  GetLineProfile                 1706 ; = (long)PointCount
+#define  GetLineProfilePointGrayLevel   1707 ;(Long)Point; = (long)GrayLevel
+#define  GetLineProfilePointX           1708 ;(Long)Point; = (double)PointX
+#define  GetLineProfilePointY           1709 ;(Long)Point; = (double)PointY
+#define  GetLineProfileDistance         1710 ;(Long)point1,Point2; = (double)Distance
+#define  GetLineProfileHighestGrayLevel 1711 ; = (Long)HighestGrayLevel
+#define  GetLineProfileLowestGrayLevel  1712 ; = (Long)LowestGrayLevel
+#define  GetLineProfileHighestIndex     1713 ; = (long)HighestIndex
+#define  GetLineProfileLowestIndex      1714 ; = (long)LowestIndex
+
+;************** Geo Model
+#define  ShowGeoModelDialog  1801
+#define  HideGeoModelDialog  1802
+#define  LoadGeoModel        1803
+#define  EndGeoModel         1804
+
+#define  ReadGeoModelConfig  1805 ;(string)FullPathFileName.gmc
+#define  GetGeoModelMatch    1806 ; = (string)NumberOfMatches
+#define  GetGeoModelResult   1807 ;(Long)index, (String)ResultName; = (string)result
+
+#define  GetGeoModelCount    1808 ; = (string)Count
+#define  GetGeoModelInfo     1809 ; (long)ModelINdex, (long)InforIndex; = (string)InforValue
+
+;following are Result Names used with GetGeoModelResult   
+#define  GeoModelUserLabel    "UserLabel"
+#define  GeoModelScore        "Score"
+#define  GeoModelPositionX    "PositionX"
+#define  GeoModelPositionY    "PositionY"
+#define  GeoModelAngle        "Angle"
+#define  GeoModelScale        "Scale"
+#define  GeoModelIndex        "Index"
+#define  GeoModelAll          "All"
+
+;following are Infor ID constants used with GetGeoModelInfo     
+#define  GeoModelSizeX       1841 ; GetGeoModelInfo returns Width of Model
+#define  GeoModelSizeY       1842 ; GetGeoModelInfo returns Height of Model   
+
+;************ Arithmetic
+#define  ShowArithmeticDialog       1901
+#define  HideArithmeticDialog       1902
+#define  LoadArithmetic             1903
+#define  EndArithmetic              1904
+
+#define  ReadArithmeticConfigFile   1905 ;(string)FullPathFileName.arc
+#define  SelectArithmeticOperation  1906 ;(string)OperationName
+#define  ArithmeticOperation        1907 ;(string)OperationName
+
+;*********** Filtering
+#define  ShowFilteringDialog       2001
+#define  HideFilteringDialog       2002
+#define  LoadFiltering             2003
+#define  EndFiltering              2004
+
+#define  ReadFilteringConfigFile   2005 ;(string)FullPathFileName.ftc
+#define  SelectFilteringOperation  2006 ;(string)OperationName
+#define  FilteringOperation        2007 ;(string)OperationName
+
+;*********** 3D
+#define  ShowImage3DViewDialog  2101
+#define  HideImage3DViewDialog  2102
+#define  LoadImage3DView        2103
+#define  EndImage3DView         2104
+
+#define  Image3DView            2105 ;(long)buffer
+
+;*********** Camera Setup
+#define  ShowCameraSetupDialog  2201 
+#define  HideCameraSetupDialog  2202
+#define  LoadCameraSetup        2203
+#define  EndCameraSetup         2204
+
+; Config
+#define  ReadCameraSetupConfigFile  2205 ;(string)FullPathFileName.csc
+#define  ReadCalibrationPoints      2206 ;(string)FullPathFileName.*
+
+; Manual Setup
+#define  SetCameraReferencePoint               2207 ;(double)PixelX,(double)PixelY,(double)WorldX,(double)WorldY,(double)WorldAngle
+#define  GetCameraReferencePoint               2208 ;(long)OpCode; (string)Result; opCode: 1=PixelX,2=(double)PixelY,3=(double)WorldX,4=(double)WorldY,5=(double)WorldAngle,else=(string)All
+#define  ComputeCameraPixelSize                2209 ;(double)PixelDeltaX,(double)PixelDeltaY,(double)WorldDeltaX,(double)WorldDeltaY
+#define  UpdateCameraPixelSize                 2210 ;(double)PixelSizeX,(double)PixelSizeY
+#define  UpdateCameraWorldReferenceAbsolute    2211 ;(double)WorldX,(double)WorldX
+#define  UpdateCameraWorldReferenceIncrement   2212 ;(double)WorldDeltaX,(double)WorldDeltaY
+
+; Get Result
+#define  GetManualWorld         2220 ;(double)PixelX,(double)PixelY; =(string)WorldX,WorldY
+#define  GetManualWorldX        2221 ;(double)PixelX,(double)PixelY; =(double)WorldX
+#define  GetManualWorldY        2222 ;(double)PixelX,(double)PixelY; =(double)WorldY
+#define  GetManualPixel         2223 ;(double)WorldX,(double)WorldY; =(string)PixelX,PixelY
+#define  GetManualPixelX        2224 ;(double)WorldX,(double)WorldY; =(double)PixelX
+#define  GetManualPixelY        2225 ;(double)WorldX,(double)WorldY; =(double)PixelY
+#define  GetManualWorldLength   2226 ;(double)PixelLength; = (double)WorldLength
+#define  GetManualWorldLengthX  2227 ;(double)PixelLengthX; = (double)WorldLengthX
+#define  GetManualWorldLengthY  2228 ;(double)PixelLengthY; = (double)WorldLengthY
+#define  GetManualPixelLength   2229 ;(double)WorldLength; = (double)PixelLength
+#define  GetManualPixelLengthX  2230 ;(double)WorldLengthX; = (double)PixelLengthX
+#define  GetManualPixelLengthY  2231 ;(double)WorldLengthY; = (double)PixelLengthY
+#define  GetManualWorldArea     2232 ;(double)PixelArea; = (double)WorldArea
+#define  GetManualPixelArea     2233 ;(double)WorldArea; = (double)PixelArea
+#define  GetManualWorldAngle    2234 ;(double)PixelAngle; = (double)WorldAngle
+#define  GetManualPixelAngle    2235 ;(double)WorldAngle; = (double)PixelAngle
+
+#define  GetCalibratedPixelSize     2236 ;=(double)Average pixel size on X and Y direction
+#define  GetCalibratedPixelSizeX    2237 ;=(double)Pixel size on X direction
+#define  GetCalibratedPixelSizeY    2238 ;=(double)Pixel size on Y direction
+
+#define  ConvertPointPixelToWorld         2240 ;(double)PixelX,(double)PixelY; =(string)WorldX,WorldY
+#define  ConvertPointPixelToWorldX        2241 ;(double)PixelX,(double)PixelY; =(double)WorldX
+#define  ConvertPointPixelToWorldY        2242 ;(double)PixelX,(double)PixelY; =(double)WorldY
+#define  ConvertPointWorldToPixel         2243 ;(double)WorldX,(double)WorldY; =(string)PixelX,PixelY
+#define  ConvertPointWorldToPixelX        2244 ;(double)WorldX,(double)WorldY; =(double)PixelX
+#define  ConvertPointWorldToPixelY        2245 ;(double)WorldX,(double)WorldY; =(double)PixelY
+#define  ConvertPointPixelToWorldOffset   2246 ;(double)PixelX,(double)PixelY; =(string)WorldOffsetX,WorldOffsetY
+#define  ConvertPointPixelToWorldOffsetX  2247 ;(double)PixelX,(double)PixelY; =(double)WorldOffsetX
+#define  ConvertPointPixelToWorldOffsetY  2248 ;(double)PixelX,(double)PixelY; =(double)WorldOffsetY
+#define  ConvertLengthPixelToWorld        2249 ;(double)PixelLength; = (double)WorldLength
+#define  ConvertLengthPixelToWorldX       2250 ;(double)PixelLengthX; = (double)WorldLengthX
+#define  ConvertLengthPixelToWorldY       2251 ;(double)PixelLengthY; = (double)WorldLengthY
+#define  ConvertAreaPixelToWorld          2252 ;(double)PixelArea; = (double)WorldArea
+#define  ConvertAnglePixelToWorld         2253 ;(double)PixelAngle = (double)WorldAngle
+#define  ConvertLengthWorldToPixel        2254 ;(double)WorldLength; = (double)PixelLength
+#define  ConvertLengthWorldToPixelX       2255 ;(double)WorldLengthX; = (double)PixelLengthX
+#define  ConvertLengthWorldToPixelY       2256 ;(double)WorldLengthY; = (double)PixelLengthY
+#define  ConvertAreaWorldToPixel          2257 ;(double)WorldArea = (double)PixelArea
+#define  ConvertAngleWorldToPixel         2258 ;(double)WorldAngle = (double)PixelAngle
+
+; Point Finding
+#define  FindCenterByEdge                2260 ;(double)PixelX,PixelY,PixelSizeX,PixelSizeY,(long)DrawOption,RoiIndex,RoiWidth,RoiHeight;=(string)PixelCenterX,PixelCenterY
+#define  FindCenterByEdgeX               2261 ;(double)PixelX,PixelY,PixelSizeX,PixelSizeY,(long)DrawOption,RoiIndex,RoiWidth,RoiHeight;=(double)PixelCenterX
+#define  FindCenterByEdgeY               2262 ;(double)PixelX,PixelY,PixelSizeX,PixelSizeY,(long)DrawOption,RoiIndex,RoiWidth,RoiHeight;=(double)PixelCenterY
+#define  FindSingleCenterByBlobAndEdge   2263 ;(long)DrawOption,BlobRoiIndex,EdgeRoiIndex,RoiCenterX,RoiCenterY,RoiWidth,RoiHeight;=(string)PixelCenterX,PixelCenterY
+#define  FindSingleCenterByBlobAndEdgeX  2264 ;(long)DrawOption,BlobRoiIndex,EdgeRoiIndex,RoiCenterX,RoiCenterY,RoiWidth,RoiHeight;=(double)PixelCenterX
+#define  FindSingleCenterByBlobAndEdgeY  2265 ;(long)DrawOption,BlobRoiIndex,EdgeRoiIndex,RoiCenterX,RoiCenterY,RoiWidth,RoiHeight;=(double)PixelCenterY
+
+; Point Calibration
+#define  SetCalPointPixel          2270 ;(long)PointIndex,(double)PixelX,PixelY
+#define  SetCalPointWorld          2271 ;(long)PointIndex,(double)WorldX,WorldY
+#define  SetCalPointPixelAndWorld  2272 ;(long)PointIndex,(double)PixelX,PixelY,WorldX,WorldY
+#define  GetNumberOfPoints         2273 ;=(long)Count
+#define  GetWorldPoint             2274 ;(long)PointIndex; =(string)WorldX,WorldY
+#define  GetWorldPointX            2275 ;(long)PointIndex; =(double)WorldX
+#define  GetWorldPointY            2276 ;(long)PointIndex; =(double)WorldY
+#define  PointCalibration          2277
+#define  ClearCalPoints            2278
+#define  ImportCalPoints           2279 ;(long)SourceType (0=pattern match, else=blob analysis)
+
+; Grid Calibration
+#define  SetGridSize          2280 ;(long)Rows,Columns
+#define  SetGridOrigin        2281 ;(double)WorldOriginX,WorldOriginY
+#define  SetGridSpacing       2282 ;(double)WorldSpacingX,WorldSpacingY
+#define  SetGridAll           2283 ;(long)Rows,Columns,(double)WorldOriginX,WorldOriginY,WorldSpacingX,WorldSpacingY
+#define  GridCalibration      2284
+#define  SetGridPointPixel    2285 ;(long)PointIndex,(double)PixelX,PixelY
+#define  SetGridPointWorld    2286 ;(long)PointIndex,(double)WorldX,WorldY
+#define  FindGridCornerPoints 2287
+#define  GetTopLeftPointID    2288 ;=(long)TopLeftPointID
+#define  GetTopLeftWorldX     2289 ;=(double)TopLeftGridPointWorldX
+#define  GetTopLeftWorldY     2290 ;=(double)TopLeftGridPointWorldY
+#define  GetTopRightPointID   2291 ;=(long)TopRightPointID
+#define  GetTopRightWorldX    2292 ;=(double)TopRightGridPointWorldX
+#define  GetTopRightWorldY    2293 ;=(double)TopRightGridPointWorldY
+#define  GetBottomLeftPointID 2294 ;=(long)BottomLeftPointID
+#define  GetBottomLeftWorldX  2295 ;=(double)BottomLeftGridPointWorldX
+#define  GetBottomLeftWorldY  2296 ;=(double)BottomLeftGridPointWorldY
+#define  ClearGridPoints      2297
+#define  ImportGridPoints     2298 ;(long)SourceType (0=pattern match, else=blob analysis)
+
+;*********** Geo Model OCR
+#define  ShowGeoModelOcrDialog       3001
+#define  HideGeoModelOcrDialog       3002
+#define  LoadGeoModelOcr             3003
+#define  EndGeoModelOcr              3004
+
+#define  ReadGeoModelOcrConfigFile   		3005 ;(string)FullPathFileName.goc
+#define  GetGeoModelOcrLetter        		3010 ; = (string)Letter
+#define  GetGeoModelOcrLetterAscWithGrab        3011 ; = (string)Letter

@@ -1,0 +1,1751 @@
+; Aerotech Include Program
+;
+; NOTE:  Do NOT modify this file - This file will change in future releases,
+; 	 and future installations/updates will erase your changes
+;
+; NOTE: Please avoid putting in lines with blanks only on the line. This interferes with
+;   source code printouts from NDebug.EXE, thus interfering with testing.
+;
+; NOTE: This file is auto generated.  Changes made to this file will be lost the next time the
+;   file is generated.
+;
+;
+
+;
+; "RIActionOpcode" Opcodes  (used only when "RIAction1" = RIO_ASYNC_MOVE)
+#define RIACTION_OPCODE_NONE                 0
+#define RIACTION_OPCODE_SPINDLE_CW           1
+#define RIACTION_OPCODE_SPINDLE_CCW          2
+#define RIACTION_OPCODE_SPINDLE_OFF          3
+#define RIACTION_OPCODE_SPINDLE_REORIENT     4
+#define RIACTION_OPCODE_ASYNCTYPE_MOVETO     5
+#define RIACTION_OPCODE_ASYNCTYPE_HOME       6
+#define RIACTION_OPCODE_ASYNCTYPE_INDEX      7
+#define RIACTION_OPCODE_ASYNCTYPE_START      8
+#define RIACTION_OPCODE_ASYNCTYPE_INFEED     9
+#define RIACTION_OPCODE_ASYNCTYPE_OSCILLATE  15
+#define RIACTION_OPCODE_ASYNCTYPE_HALT       16
+#define RIACTION_OPCODE_HANDWHEEL            17
+#define RIACTION_OPCODE_SPINDLE_CW_ASYNC     18
+#define RIACTION_OPCODE_SPINDLE_CCW_ASYNC    19
+;
+; "RIAction1" values  (register IO values for Request/Action registers)
+#define RIO_CYCLESTART         0x0001
+#define RIO_CYCLESTEP          0x0002
+#define RIO_CYCLERETRACE_ON    0x0004
+#define RIO_CYCLERETRACE_OFF   0x0008
+#define RIO_CYCLESTOP          0x0010
+#define RIO_CYCLERESET         0x0020
+#define RIO_CYCLEABORT         0x0040
+#define RIO_ASYNC_MOVE         0x0080
+#define RIO_SLEWSTART          0x0100
+#define RIO_SLEWSTOP           0x0200
+#define RIO_reserved_2         0x0400
+#define RIO_reserved_3         0x0800
+#define RIO_AUTOMODE_ON        0x1000
+#define RIO_AUTOMODE_OFF       0x2000                    
+#define RIO_SLEW3DSTART        0x4000
+;
+; ONGOSUB defines
+#define PRIORITY_MEDIUM    1
+#define PRIORITY_FAULT     2
+#define PRIORITY_HIGHEST   3
+
+#define CANNEDFUNCTION_ID_ENDOFBLOCK -2
+;
+; ON .. SET defines
+#define ONSET_MODE_LEVEL   0
+#define ONSET_MODE_EDGE    1
+#define ONSET_MODE_LATCH   2
+;
+; Return types
+#define RETURNTYPE_NULL          0
+#define RETURNTYPE_START         1
+#define RETURNTYPE_INTERRUPT     2
+#define RETURNTYPE_END           3
+#define RETURNTYPE_OFFSET        4
+;
+; Callbacks
+;     Aerotech reserves all values above CALLBACK_RESERVE
+;     
+;     For user defined callbacks, use values LESS THAN CALLBACK_RESERVE
+;
+; WARNING: these must match the similar constants in /A32class/include/aclnotfy.h
+#define CALLBACK_RESERVE   10000      ; WARNING: must match CALLBACKTYPE_RESERVED definition in include/Aer960.h !
+;
+#define MSG CALLBACK (CALLBACK_RESERVE+1),
+#define msg MSG
+;
+#define COMCALLBACK CALLBACK (CALLBACK_RESERVE+10),
+;
+#define DOTNETCALLBACK CALLBACK (CALLBACK_RESERVE+15),
+;
+#define DATASTART CALLBACK (CALLBACK_RESERVE+20),
+#define datastart CALLBACK (CALLBACK_RESERVE+20),
+#define DATASTOP CALLBACK (CALLBACK_RESERVE+21)
+#define datastop CALLBACK (CALLBACK_RESERVE+21)
+#define DATAOPT CALLBACK (CALLBACK_RESERVE+22)
+#define dataopt CALLBACK (CALLBACK_RESERVE+22)
+;
+#define OPENDLL CALLBACK (CALLBACK_RESERVE+31),
+#define opendll CALLBACK (CALLBACK_RESERVE+31),
+#define CALLDLL CALLBACK (CALLBACK_RESERVE+32),
+#define calldll CALLBACK (CALLBACK_RESERVE+32),
+#define CLOSEDLL CALLBACK (CALLBACK_RESERVE+33),
+#define closedll CALLBACK (CALLBACK_RESERVE+33),
+;
+#define nscopetrig CALLBACK (CALLBACK_RESERVE+40),
+#define NSCOPETRIG CALLBACK (CALLBACK_RESERVE+40),
+#define nscopestart CALLBACK (CALLBACK_RESERVE+41),
+#define NSCOPESTART CALLBACK (CALLBACK_RESERVE+41),
+#define nscopemanualxyscale CALLBACK (CALLBACK_RESERVE+42),
+#define NSCOPEMANUALXYSCALE CALLBACK (CALLBACK_RESERVE+42),
+#define nscopelttrig CALLBACK (CALLBACK_RESERVE+43),
+#define NSCOPELTTRIG CALLBACK (CALLBACK_RESERVE+43)
+;
+;Optional data collection 
+#define _POSCMD_1MSEC    0x01
+#define _POSFBK_1MSEC    0x02
+#define _ID_CMD          0x03
+#define _ID_FBK          0x04
+#define _IQ_CMD          0x05
+#define _IQ_FBK          0x06
+#define _PHASEA_IFBK     0x07
+#define _PHASEB_IFBK     0x08
+#define _ENCODER_SIN_AD  0x09
+#define _ENCODER_COS_AD  0x0A
+#define _AD_1            0x0B
+#define _AD_2            0x0C
+#define _LT_CHANNEL1     0x0D
+#define _LT_CHANNEL2     0x0E
+#define _ZHEIGHT_DIFF    0x0F
+#define _ZHEIGHT_SUM     0x10
+#define _ZHEIGHT         0x11
+#define _ZHEIGHT_LPF     0x12
+#define _AD_1_OUT        0x13
+#define _AD_2_OUT        0x14
+#define _DIGITALIO       0x15
+#define _TEST            0x16
+#define _DSPMEM_INT      0x17  ; WARNING: the *DSPMEM* optional data collection codes
+#define _DSPMEM_FLOAT    0x18  ; hijack one of the other buffer locations and therefore
+#define _DSPMEM_DOUBLE   0x19  ; should only be used for 1kHz collection
+#define _PSO_STATUS      0x1A
+#define _CNCLINE         0x20      ; do we need a CAMLINE too???
+#define _VME_AXIS1       0x21
+#define _VME_AXIS2       0x22
+#define _VME_AXIS3       0x23
+#define _VME_AXIS4       0x24
+#define _PROFFLAGS       0x25
+#define _PROFTRG         0x26
+#define _INPUT           0x27
+#define _OUTPUT          0x28
+#define _DRIVESTAT       0x29       ; upper byte is mask to and with (0 means no anding)
+#define _AXISSTAT        0x2A       ; upper byte is mask to and with (0 means no anding)
+#define _RAWACC          0x2B
+#define _VBIN_INPUT      0x2C
+#define _VBIN_OUTPUT     0x2D
+#define _VREG_INPUT      0x2E
+#define _VREG_OUTPUT     0x2F
+#define _AXISFAULT       0x30
+#define _POSCAL          0x31      ; adjusment to POS cmd due to: 1d cal + 2d cal + backlash
+#define _PROFSTARTANG    0x40   ; task-based  "scaled" radians (radians*cntsperinch)
+#define _PROFENDANG      0x41   ; task-based  "scaled" radians (radians*cntsperinch)
+#define _PROFPOS         0x42   ; task-based inches  
+#define _PROFVEL         0x43   ; task-based inches
+#define _PROFTOT_DIST    0x44   ; NOT USED ?? task-based inches
+#define _PROFPERC_DONE   0x45   ; NOT USED ?? unitless
+#define _PROFRADERR      0x47   ; radius error (percent)
+#define _PositionUnits        0x70
+#define _PositionCmdUnits     0x71
+#define _PositionCnts         0x72
+#define _PositionCmdCnts      0x73
+#define _PositionProgCmdCnts  0x74
+#define _PositionExtUnits     0x75
+#define _PositionExtCnts      0x76
+#define _PositionErrUnits     0x77
+#define _PositionErrCnts      0x78
+#define _CurrentErr           0x79
+#define _VelocityCntsSecAvg   0x7A
+#define _CurrentAvg           0x7B
+#define _CurrentCmd           0x7C
+#define _Current              0x7D
+#define _Misc                 0x7E     ; upper byte is a OPTIONAL_DATA_CODED_Misc_ constant
+#define _GlobalVar            0x7F     ; upper byte is var number, axis number is ignored
+#define _AxisParm             0x80     ; upper byte is prm number
+#define _TaskParm             0x81     ; upper byte is prm number, axis number is really task number
+#define _ProgVar              0x82     ; upper byte is prm number, axis number is really task number
+#define _TaskStat             0x83     ; upper byte status number, axis number is really task number
+#define _PeakCurrent          0x84   
+#define _TaskFault            0x85     ; axis number is really task number
+#define _TaskWarning          0x86     ; axis number is really task number
+#define _Backlash             0x87     
+#define _HomeState            0x88     ; a HOMESTATUSMASK_ value  
+#define _PosCal2D             0x89     ; position cal (2D contribution only)
+#define _VelocityCntsSec      0x8A     ; instantaonous (as opposed to averaged)
+#define _VelocityCmdCntsSec   0x8B     ; instantaonous (as opposed to averaged)
+#define _RawFire              0x8C     ; items from the send record, right off the firewire
+#define _Normalcy             0x8D
+#define _TotalMoveTime        0x8E
+#define _GlobalEnetIOStatus   0x8F
+#define _RemoteServerStatus   0x90
+#define _RelativeSettleTime   0x91     ; milliseconds
+#define _PositionEncoder      0x92     ; user units
+#define _JerkCommand          0x93     ; user units
+#define _PositionProgCmdUnits 0x94
+#define _GantryOffset         0x95
+#define _SoftwareHome         0x96
+;
+#define _LAST_VALID           0x9F
+;
+; GLOBAL ETHERNET I/O STATUS BITMASK
+#define GLOBAL_ETHERNET_FAULT_SYSTEM_ERROR 		    0x00000001     ; Low level system error 
+#define GLOBAL_ETHERNET_STATUS_PROCESS_TERMINATED           0x00000002     ; Ethernet RTSS process terminated
+#define GLOBAL_ETHERNET_STATUS_RESERVED1                    0x00000004      
+#define GLOBAL_ETHERNET_STATUS_MODULE_CONNECTED             0x00000008     ; TCP connection established  
+#define GLOBAL_ETHERNET_STATUS_NO_IO_TO_UPDATE              0x00000010     ; no InetGlobalDefNum* parameters 
+#define GLOBAL_ETHERNET_STATUS_A3200_INITIALIZING           0x00000020     ; Only set when A3200 initialization is 								                   ;in progress 
+#define GLOBAL_ETHERNET_STATUS_RESERVED2                    0x00000040     
+#define GLOBAL_ETHERNET_STATUS_MODULE_MODBUSEXCEPTION       0x00000080     ; Modbus function returned an exception
+#define GLOBAL_ETHERNET_STATUS_SOCKET_ERROR                 0x00000100     ; socket error (duplicate port? invalid
+; 
+; Remote Ethernet Status Bitmask
+#define ETHERNET_SOCKET_ERROR             0x00000001  ; Ethernet Timeout (socket) 
+#define ETHERNET_WAIT_TIMEOUT             0x00000002  ; Ethernet Timeout (mutex) 
+#define ETHERNET_WDOG_TRIPPED             0x00000004  ; WDOG tripped because nothing was received during the WDOG time period
+#define ETHERNET_WDOG_STOPPED             0x00000008  ; WDOG thread forever loop stopped running
+#define ETHERNET_WDOG_SEND_UNSUCCESSFUL   0x00000010  ; WDOG pakcet did not go thru 
+#define ETHERNET_WDOG_RMT_ERROR           0x00000020  ; WDOG was sent but an error occured in the server side
+#define ETHERNET_CALLBACK_SOCKET_ERROR    0x00000040  ; WDOG was sent but an error occured in the server side
+#define ETHERNET_WDOG_PAUSED              0x00000080  ; WDOG thread paused temporarily both on server and client
+#define ETHERNET_WDOG_ACTIVE              0x00000100  ; WDOG thread active
+;
+; The below are possible args to NSCOPETRIG command, to make NSCOPE.EXE show something other 
+; than external encoder position in the "ext-pos" slot. Arg. 1 to NSCOPE is the 
+; code for what axis 1 (X) ext-pos will be, Arg 2. is for what axis 2 (Y) ext-pos will be, etc.
+; Any code below can be used for any argument. The codes that are commented "task-based", will 
+; give the information related to the task that the given axis is bound to. 
+; The below that say "scaled" will return the value in the units shown, but converted to counts 
+; (using the english conversion factor for that axis)
+#define EXTPOS_OPTCODE_CNCLINE         0x51
+#define EXTPOS_OPTCODE_PROFFLAGS       0x52  
+#define EXTPOS_OPTCODE_PROFTRG         0x53  
+#define EXTPOS_OPTCODE_INPUT           0x54   
+#define EXTPOS_OPTCODE_OUTPUT          0x55   
+#define EXTPOS_OPTCODE_DRIVESTAT       0x56  
+#define EXTPOS_OPTCODE_AXISSTAT        0x57  
+#define EXTPOS_OPTCODE_RAWACC          0x58
+#define EXTPOS_OPTCODE_VBIN_INPUT      0x59 
+#define EXTPOS_OPTCODE_VBIN_OUTPUT     0x5A
+#define EXTPOS_OPTCODE_VREG_INPUT      0x5B
+#define EXTPOS_OPTCODE_VREG_OUTPUT     0x5C
+#define EXTPOS_OPTCODE_DRIVEFAULT      0x5D
+#define EXTPOS_OPTCODE_PROFSTARTANG    0x70
+#define EXTPOS_OPTCODE_PROFENDANG      0x71
+#define EXTPOS_OPTCODE_PROFPOS         0x72
+#define EXTPOS_OPTCODE_PROFVEL         0x73
+#define EXTPOS_OPTCODE_MAX             0xFF
+;
+; Data collection bit mask values (these must match the ones in INCLUDE/ACLNOTIFY.H !)
+#define DATA_CLOCK              0x00000001
+#define DATA_POSITION           0x00000002
+#define DATA_POSITION_CMD       0x00000004
+#define DATA_POSITION_RAW       0x00000008
+#define DATA_VELOCITY_RAW       0x00000010
+#define DATA_VELOCITY           0x00000020
+#define DATA_VELOCITY_CMD       0x00000040
+#define DATA_ACCELERATION       0x00000080
+#define DATA_CURRENT            0x00000100
+#define DATA_IN                 0x00000200
+#define DATA_OUT                0x00000400
+#define DATA_ANL0               0x00000800
+#define DATA_ANL1               0x00001000
+#define DATABIT_CURRENT_CMD     0x00002000
+#define DATABIT_AXIS_STATUS     0x00004000
+#define DATABIT_DRIVE_STATUS    0x00008000
+#define DATABIT_FAULT           0x00010000
+#define DATABIT_AXISCAL         0x00020000
+#define DATABIT_OPTIONAL_DATA1  0x00040000
+#define DATABIT_OPTIONAL_DATA2  0x00080000
+#define DATABIT_POSEXT              0x00100000
+#define DATABIT_POSEXT_PROF_POS     0x00200000
+#define DATABIT_POSEXT_PROF_VEL     0x00400000
+#define DATABIT_POSEXT_RAWACC       0x00800000
+#define DATABIT_VME_AXIS1           0x01000000
+#define DATABIT_VME_AXIS2           0x02000000
+#define DATABIT_VME_AXIS3           0x04000000
+#define DATABIT_VME_AXIS4           0x08000000
+;
+;Display Flags used by MMI for display
+#define DF_LIST         0x40000000  ;Display text is added to MMI List area
+#define DF_MSGBOX       0x20000000  ;Display message box
+#define DF_INPUT        0x10000000  ;Display user input box
+#define DF_LAMP         0x08000000  ;Lamp display
+#define DF_MSGMENU      0x04000000  ;Menu Display
+#define DF_MSGTASK      0x02000000  ;Task Display
+#define DF_SETMANIO     0x01000000  ;Change ManIO Key
+#define DF_LIST_CLEAR   0x00800000  ;Clear the List window
+#define DF_LIST_SHOW    0x00400000  ;Show the List window
+#define DF_LIST_HIDE    0x00200000  ;Hide the List window
+#define DF_PROGRAM      0x00100000  ;Display/Load Program
+#define DF_FILE_SELECT  0x00080000  ;Select a file
+;
+; Applies to Message Box messages
+#define DF_MSGBOX_OKONLY            0  ;OK Button
+#define DF_MSGBOX_OKCANCEL          1  ;OK/Cancel Button
+#define DF_MSGBOX_ABORTRETRYIGNORE  2  ;Abort/Retry/Ignore Button
+#define DF_MSGBOX_YESNOCANCEL       3  ;Yes/No/Cancel Button
+#define DF_MSGBOX_YESNO             4  ;Yes/No Button
+#define DF_MSGBOX_RETRYCANCEL       5  ;Retry/Cancel Button
+;
+#define DF_ICON_CRITICAL      16 
+#define DF_ICON_QUESTION      32
+#define DF_ICON_EXCLAMATION   48
+#define DF_ICON_INFORMATION   64
+;
+#define DF_DEFBUTTON1   0
+#define DF_DEFBUTTON2   256
+#define DF_DEFBUTTON3   512
+;
+; Which button was pressed
+#define OK_BUTTON       1  
+#define CANCEL_BUTTON   2
+#define ABORT_BUTTON    3
+#define RETRY_BUTTON    4
+#define IGNORE_BUTTON   5
+#define YES_BUTTON      6
+#define NO_BUTTON       7
+;
+; Applies to Input Display messages
+#define DF_INPUT_INTEGER   0x00800000  ;Input Value is an integer
+#define DF_INPUT_STRING    0x00400000  ;Input Value is a string
+;
+; Applies to Message Menu messages
+#define DF_MENU_ADD        (DF_MSGMENU + 0x00800000)  ;Add an item to a Menu
+#define DF_MENU_SHOW       (DF_MSGMENU + 0x00400000)  ;Show the Menu
+#define DF_MENU_REMOVE     (DF_MSGMENU + 0x00200000)  ;Clear items the Menu
+;
+; MSG $flags, $id, [arbitrary data data]
+#define MSGPROGRAM MSG (DF_PROGRAM),
+#define msgprogram MSGPROGRAM
+;
+; Lower Byte is Task #
+#define DF_PROGRAM_ABORT         0x0010
+#define DF_PROGRAM_RESET         0x0020
+#define DF_PROGRAM_EXECUTE       0x0040
+#define DF_PROGRAM_FORCE_EXECUTE (DF_PROGRAM_ABORT + DF_PROGRAM_RESET + DF_PROGRAM_EXECUTE)
+;
+; Applies to File Select messages
+#define DF_FILESELECT_OPEN    0
+#define DF_FILESELECT_SAVE    1
+;
+; MSGFILESELECT $flags = DF_FILE_OPEN or DF_FILE_SAVE, string
+#define MSGFILESELECT MSG (DF_FILE_SELECT),
+#define msgfileselect MSGFILESELECT
+;
+; user display callbacks (backward compatability)
+#define DISPLAY MSG (-1),
+#define display DISPLAY
+;
+; MSG $flags = DF_LAMP + (0,1,2,3,4,5,6,7), $color, string
+#define MSGLAMP MSG DF_LAMP-1+ 
+#define msglamp MSGLAMP
+;
+; MSG $flags = DF_MSGTASK, eRc, string
+#define MSGTASK MSG (DF_MSGTASK),
+#define msgtask MSGTASK
+;
+; MSGINPUT $flags = DF_LAMP, $id = (0, DF_MSGBOX_xxx + DF_INPUT_xxx), string
+#define MSGINPUT MSG (DF_INPUT), 
+#define msginput MSGINPUT
+;
+; MSGBOX $flags = DF_MSGBOX, $id = (0, DF_MSGBOX_xxx + DF_ICON_xxx + DF_DEFxxx), string
+#define MSGBOX MSG (DF_MSGBOX), 
+#define msgbox MSGBOX
+;
+; MSGDISPLAY $id = any user value, string
+#define MSGDISPLAY MSG 0,
+#define msgdisplay MSG 0,
+;
+; MSGCLEAR $id = (-1 = clear all, # id of msg to clear)
+#define MSGCLEAR MSG (DF_LIST_CLEAR), 
+#define msgclear MSGCLEAR
+;
+; MSGHIDE/MSGSHOW
+#define MSGHIDE MSG (DF_LIST_HIDE), 0, ""
+#define msghide MSGHIDE
+;
+#define MSGSHOW MSG (DF_LIST_SHOW), 0, ""
+#define msgshow MSGSHOW
+;
+; MSGMENU $flags = DF_MSGMENU, $id = 
+#define MSGMENU MSG
+#define msgmenu MSG
+;
+; SETMANIO $flags = DF_SETMANIO, $id = 
+#define SETMANIO MSG (DF_SETMANIO),
+#define setmanio SETMANIO
+;
+#define 4DALIGN calldll "A32CBack.dll", "AerCBackFastAlign4D", 
+#define 4dalign 4DALIGN 
+;
+#define VOLCOMP CALLDLL "A32CBack.dll", "AerCBackCorrectionFactor",
+#define volcomp VOLCOMP
+;
+#define VOLCOMPLZR CALLDLL "A32CBack.dll", "AerCBackCorrectionFactor", (12.357898), (72.536), (1.0), (16.15426), (535.74), (0),
+#define volcomplzr VOLCOMPLZR
+;
+#define HELP CALLDLL "A32CBACK.dll", "AerCBackHelp",
+#define help CALLDLL "A32CBACK.dll", "AerCBackHelp", 
+;
+#define HELP_NUMBER		0
+#define HELP_INDEX 		1
+#define HELP_CONTENTS		2
+#define HELP_TEXT       	3
+#define HELP_CLOSE		4
+#define help_number		0
+#define help_index 		1
+#define help_contents		2
+#define help_text    		3
+#define help_close		4
+;
+; File access callbacks
+#define FILEOPEN CALLDLL "A32CBack.dll", "AerCBackFileOpen",
+#define fileopen FILEOPEN
+#define FILECLOSE CALLDLL "A32CBack.dll", "AerCBackFileClose"
+#define fileclose FILECLOSE
+#define FILEWRITE CALLDLL "A32CBack.dll", "AerCBackFileWrite",
+#define filewrite FILEWRITE
+#define FILEWRITENOTERM CALLDLL "A32CBack.dll", "AerCBackFileWriteNoTerm",
+#define filewritenoterm FILEWRITENOTERM
+#define FILEREADINI CALLDLL "A32CBack.dll", "AerCBackFileReadIniValue",
+#define filereadini FILEREADINI
+#define FILEWRITEINI CALLDLL "A32CBack.dll", "AerCBackFileWriteIniValue",
+#define filewriteini FILEWRITEINI
+#define FILEREAD CALLDLL "A32CBack.dll", "AerCBackFileRead",
+#define fileread FILEREAD
+#define FILEEXISTS CALLDLL "A32CBack.dll", "AerCBackFileExists",
+#define fileexists FILEEXISTS
+;
+#define MAKESTRING CALLDLL "A32CBack.dll", "AerCBackMakeString", 
+#define makestring MAKESTRING
+;
+#define COMMINIT CALLDLL "A32CBack.dll", "AerCBackCommInit",
+#define comminit COMMINIT
+#define COMMSETTIMEOUT CALLDLL "A32CBack.dll", "AerCBackCommSetTimeouts",
+#define commsettimeout COMMSETTIMEOUT
+;
+; Executing DLL/EXEs (non modal)
+#define EXE CALLDLL "A32CBack.dll", "AerCBackExe", 0,
+#define exe EXE
+;
+; Executing DLL/EXEs (modal)
+#define EXEMODAL CALLDLL "A32CBack.dll", "AerCBackExe", 1,
+#define exemodal EXEMODAL
+;
+#define LOADCAMTABLE CALLDLL "A32CBack.dll", "AerCBackCamTableDownload",
+#define loadcamtable LOADCAMTABLE 
+#define FREECAMTABLE CALLDLL "A32CBack.dll", "AerCBackCamTableFree",
+#define freecamtable FREECAMTABLE
+;
+; Defines for LOADCALFILE CNC command
+; NOTE: If the cal type constants are changed here, they also must be changed in AerCBack.h!
+#define LOADCALFILE CALLDLL "A32CBack.dll", "AerCBackCalFileDownload",
+#define loadcalfile LOADCALFILE 
+#define 1D_GAIN_CAL  0
+#define 1D_CAL       1
+#define 2D_CAL       2
+;
+#define LOADTOOLTABLE CALLDLL "A32CBack.dll", "AerCBackToolTableDownload",
+#define loadtooltable LOADTOOLTABLE
+;
+; Task program execution callbacks
+#define PROGRAMEXECUTEFILE CALLDLL "A32CBack.dll", "AerCBackPGMExecuteFile",
+#define programexecutefile PROGRAMEXECUTEFILE
+#define PROGRAMDOWNLOADFILE CALLDLL "A32CBack.dll", "AerCBackPGMDownloadFile",
+#define programdownloadfile PROGRAMDOWNLOADFILE
+#define PROGRAMEXECUTE CALLDLL "A32CBack.dll", "AerCBackPGMExecute",
+#define programexecute PROGRAMEXECUTE
+#define PROGRAMTASKRESET CALLDLL "A32CBack.dll", "AerCBackPGMTaskReset",
+#define programtaskreset PROGRAMTASKRESET
+#define PROGRAMUNLOAD CALLDLL "A32CBack.dll", "AerCBackPGMUnload",
+#define programunload PROGRAMUNLOAD
+;
+#define TASKEXEC_DEFAULT         -1    ;Execute default Mode (Run/Step) 
+#define TASKEXEC_RUN_INTO        0     ;Run into subroutines 
+#define TASKEXEC_STEP_INTO       1     ;Step into subroutines
+#define TASKEXEC_STEP_OVER       2     ;Step over subroutines
+#define TASKEXEC_RUN_OVER        3     ;Run over subroutines 
+;
+; Change axis configuration                
+#define CHANGECONFIG CALLDLL "A32CBack.dll", "AerCBackChangeConfig",
+#define changeconfig CHANGECONFIG
+;
+; Color defines for the MSGLAMP# commands
+#define GRAY      (-1)
+#define gray      GRAY
+#define BLACK     0x000000
+#define black     BLACK
+#define RED       0x0000FF
+#define red       RED
+#define GREEN      0x00FF00
+#define green     GREEN
+#define YELLOW    0x00FFFF
+#define yellow    YELLOW
+#define BLUE      0xFF0000
+#define blue      BLUE
+#define MAGENTA    0xFF00FF
+#define magenta   MAGENTA
+#define CYAN      0xFFFF00
+#define cyan      CYAN
+#define WHITE     0xFFFFFF
+#define white     WHITE
+;
+; Galvo definitions set 1
+#DEFINE LOAD_PROGRAM_FILE          0,
+#DEFINE LOAD_CORRECTION_FILE       1,
+#DEFINE SELECT_COR_TABLE           2,
+#DEFINE LOAD_VARPOLYDELAY          3,
+#DEFINE DSP_START                  4
+#DEFINE SET_LASER_MODE             5,
+#DEFINE SET_FIRSTPULSE_KILLER      6,
+#DEFINE SET_SOFTSTART_LEVEL        7,
+#DEFINE SET_SOFTSTART_MODE         8,
+#DEFINE SET_STANDBY                9,
+#DEFINE SET_DELAY_MODE             10,
+#DEFINE SET_MATRIX                 11,
+#DEFINE SET_OFFSET                 12,
+#DEFINE GET_HEAD_STATUS            13,
+#DEFINE GET_VALUE                  14,
+#DEFINE GET_WAVEFORM               15,
+#DEFINE MEASUREMENT_STATUS         16,
+#DEFINE CONTROL_COMMAND            17,
+#DEFINE GET_IO_STATUS              18
+#DEFINE READ_IO_PORT               19
+#DEFINE WRITE_8BIT_PORT            20,
+#DEFINE WRITE_DA_X                 21,
+#DEFINE WRITE_IO_PORT              22,
+#DEFINE SET_CONTROL_MODE           23,
+#DEFINE SELECT_LIST                24,
+#DEFINE SET_MAX_COUNTS             25,
+#DEFINE GET_COUNTS                 26
+#DEFINE GET_STARTSTOP_INFO         27
+#DEFINE SET_START_LIST             28,
+#DEFINE EXECUTE_LIST               29,
+#DEFINE STOP_EXECUTION             30
+#DEFINE STOP_LIST                  31
+#DEFINE RESTART_LIST               32
+#DEFINE GET_STATUS                 33,
+#DEFINE READ_STATUS                34
+#DEFINE GET_WAIT_STATUS            35
+#DEFINE RELEASE_WAIT               36
+#DEFINE AUTO_CHANGE                37
+#DEFINE AUTO_CHANGE_POS            38,
+#DEFINE START_LOOP                 39
+#DEFINE QUIT_LOOP                  40
+#DEFINE SET_LIST_MODE              41,
+#DEFINE GET_LIST_SPACE             42
+#DEFINE SET_INPUT_POINTER          43,
+#DEFINE GET_INPUT_POINTER          44
+#DEFINE EXECUTE_AT_POINTER         45,
+#DEFINE DISABLE_LASER              46
+#DEFINE ENABLE_LASER               47
+#DEFINE LASER_SIGNAL_ON            48
+#DEFINE LASER_SIGNAL_OFF           49
+#DEFINE GOTO_XY                    50,
+#DEFINE GET_XY_POS                 51,
+#DEFINE Z_OUT                      52,
+#DEFINE READ_PIXEL_AD              53,
+#DEFINE RTC4_COUNT_CARDS           54
+#DEFINE SELECT_RTC                 55,
+#DEFINE GET_DLL_VERSION            56
+#DEFINE GET_HEX_VERSION            57
+#DEFINE GET_RTC_VERSION            58
+#DEFINE GET_SERIAL_NUMBER          59
+#DEFINE HOME_POSITION              60,
+#DEFINE GET_HI_DATA                61,
+#DEFINE GET_TIME                   62
+#DEFINE SET_PISO_CONTROL           63,
+#DEFINE AUTO_CAL                   64,
+#DEFINE JUMP_ABS                   65,
+#DEFINE JUMP_REL                   66,
+#DEFINE MARK_ABS                   67,
+#DEFINE MARK_REL                   68,
+#DEFINE TIMED_JUMP_ABS             69,
+#DEFINE TIMED_JUMP_REL             70,
+#DEFINE TIMED_MARK_ABS             71,
+#DEFINE TIMED_MARK_REL             72,
+#DEFINE ARC_ABS                    73,
+#DEFINE ARC_REL                    74,
+#DEFINE SET_TRIGGER                75,
+#DEFINE SET_CONTROL_MODE_LIST      76,
+#DEFINE SET_END_OF_LIST            77
+#DEFINE SET_EXTSTARTPOS_LIST       78,
+#DEFINE SET_WAIT                   79,
+#DEFINE SET_LIST_JUMP              80,
+#DEFINE LIST_CALL                  81,
+#DEFINE LIST_RETURN                82
+#DEFINE LIST_NOP                   83
+#DEFINE SET_LASER_TIMING           84,
+#DEFINE SET_FIRSTPULSE_KILLER_LIST 85,
+#DEFINE SET_STANDBY_LIST           86,
+#DEFINE SET_LASER_DELAYS           87,
+#DEFINE SET_SCANNER_DELAYS         88,
+#DEFINE SET_JUMP_SPEED             89,
+#DEFINE SET_MARK_SPEED             90,
+#DEFINE SET_MATRIX_LIST            91,
+#DEFINE SET_OFFSET_LIST            92,
+#DEFINE LASER_ON_LIST              93,
+#DEFINE LASER_SIGNAL_ON_LIST       94
+#DEFINE LASER_SIGNAL_OFF_LIST      95
+#DEFINE Z_OUT_LIST                 96,
+#DEFINE SET_PIXEL_LINE             97,
+#DEFINE SET_PIXEL                  98,
+#DEFINE CLEAR_IO_COND_LIST         99,
+#DEFINE LIST_CALL_COND             100,
+#DEFINE LIST_JUMP_COND             101,
+#DEFINE SET_IO_COND_LIST           102,
+#DEFINE WRITE_8BIT_PORT_LIST       103,
+#DEFINE WRITE_DA_X_LIST            104,
+#DEFINE WRITE_IO_PORT_LIST         105,
+#DEFINE LONG_DELAY                 106,
+#DEFINE SAVE_AND_RESTART_TIMER     107
+#DEFINE SET_WOBBEL                 108,
+#DEFINE LOAD_CORRECTION_FILE_USER  109,
+#DEFINE SET_OFFSET_USER            110,
+#DEFINE GOTO_XY_USER               111,
+#DEFINE GET_XY_POS_USER            112,
+#DEFINE Z_OUT_USER                 113,
+#DEFINE HOME_POSITION_USER         114,
+#DEFINE GET_HI_DATA_USER           115,
+#DEFINE JUMP_ABS_USER              116,
+#DEFINE JUMP_REL_USER              117,
+#DEFINE MARK_ABS_USER              118,
+#DEFINE MARK_REL_USER              119,
+#DEFINE TIMED_JUMP_ABS_USER        120,
+#DEFINE TIMED_JUMP_REL_USER        121,
+#DEFINE TIMED_MARK_ABS_USER        122,
+#DEFINE TIMED_MARK_REL_USER        123,
+#DEFINE ARC_ABS_USER               124,
+#DEFINE ARC_REL_USER               125,
+#DEFINE SET_JUMP_SPEED_USER        126,
+#DEFINE SET_MARK_SPEED_USER        127,
+#DEFINE Z_OUT_LIST_USER            128,
+#DEFINE SET_PIXEL_LINE_USER        129,
+#DEFINE SET_WOBBEL_USER            130,
+#DEFINE AER_END_GALVO_BLOCK        131
+#DEFINE GET_XYZ_POS                132,
+#DEFINE GET_Z_DISTANCE             133,
+#DEFINE GOTO_XYZ                   134,
+#DEFINE LOAD_Z_TABLE               135,
+#DEFINE SET_DEFOCUS                136,
+#DEFINE TEACHIN                    137,
+#DEFINE JUMP_ABS_3D                138,
+#DEFINE JUMP_REL_3D                139,
+#DEFINE MARK_ABS_3D                140,
+#DEFINE MARK_REL_3D                141,
+#DEFINE SET_DEFOCUS_LIST           142,
+#DEFINE GET_XYZ_POS_USER           143,
+#DEFINE GET_Z_DISTANCE_USER        144,
+#DEFINE GOTO_XYZ_USER              145,
+#DEFINE JUMP_ABS_3D_USER           146,
+#DEFINE JUMP_REL_3D_USER           147,
+#DEFINE MARK_ABS_3D_USER           148,
+#DEFINE MARK_REL_3D_USER           149,
+#DEFINE SET_DEFOCUS_USER           150,
+#DEFINE SET_DEFOCUS_LIST_USER      151,
+#DEFINE SET_START_LIST_1           152
+#DEFINE SET_START_LIST_2           153
+#DEFINE FLY_RETURN                 154,
+#DEFINE GET_ENCODER                155,
+#DEFINE GET_MARKING_INFO           156
+#DEFINE SET_EXT_START_DELAY        157,
+#DEFINE SET_EXT_START_DELAY_LIST   158,
+#DEFINE SET_FLY_ROT                159,
+#DEFINE SET_ROT_CENTER             160,
+#DEFINE SET_FLY_X                  161,
+#DEFINE SET_FLY_Y                  162,
+#DEFINE SIMULATE_ENCODER           163,
+#DEFINE SIMULATE_EXT_START         164,
+#DEFINE FLY_RETURN_USER            165,
+#DEFINE SET_ROT_CENTER_USER        166,
+#DEFINE SET_FLY_X_USER             167,
+#DEFINE SET_FLY_Y_USER             168,
+#DEFINE LIST_CALL_LABEL            169,
+#DEFINE SET_LIST_JUMP_LABEL        170,
+#DEFINE USER_LABEL                 171,
+#DEFINE WRITE_DA_1                 172,
+#DEFINE WRITE_DA_1_LIST            173,
+#DEFINE WRITE_DA_2                 174,
+#DEFINE WRITE_DA_2_LIST            175,
+;
+; Galvo definitions set 2
+#DEFINE ATTACH_TO_MARKER               0
+#DEFINE CENTER_OBJ                     1,
+#DEFINE CLOSE_JOB                      2,
+#DEFINE DELETE_ALL_OBJ                 3
+#DEFINE DELETE_OBJ                     4,
+#DEFINE DO_AUTO_CALIBRATE              5,
+#DEFINE DOWNLOAD_ALL_OBJ               6,
+#DEFINE DOWNLOAD_OBJ                   7,
+#DEFINE GET_SCAN_CARD_COUNT            8,
+#DEFINE GET_ALL_OBJ_RECT               9,
+#DEFINE GET_BARCODE_ATTRIBUTES         10,
+#DEFINE GET_BITMAP_ATTRIBUTES          11,
+#DEFINE GET_BUSY_STATUS                12,
+#DEFINE GET_BUSY_STATUS_EX             13,
+#DEFINE GET_DEFAULT_PROFILE            14,
+#DEFINE GET_DRILL_ATTRIBUTES           15,
+#DEFINE GET_JOB_COUNT                  16,
+#DEFINE GET_JOB_NOTE                   17,
+#DEFINE GET_LASER_CONFIG_FILE          18,
+#DEFINE GET_LASER_NAME                 19,
+#DEFINE GET_LASER_POWER_MIN_MAX        20,
+#DEFINE GET_LENS_CAL_FACTOR            21,
+#DEFINE GET_LENS_CAL_FILE              22,
+#DEFINE GET_MOTF_CONFIG                23,
+#DEFINE GET_OBJ_CHAR_STRING            24,
+#DEFINE GET_OBJ_COUNT                  25,
+#DEFINE GET_OBJ_FILL                   26,
+#DEFINE GET_OBJ_FILL_LIST              27,
+#DEFINE GET_OBJ_GRAPHIC_FILE           28,
+#DEFINE GET_OBJ_MARK_FILL_FLAG         29,
+#DEFINE GET_OBJ_MARK_OUTLINE_FLAG      30,
+#DEFINE GET_OBJ_MEM_SIZE               31,
+#DEFINE GET_OBJ_MARK_MODE              32,
+#DEFINE GET_OBJ_NAME                   33,
+#DEFINE GET_OBJ_NOTE                   34,
+#DEFINE GET_OBJ_NUM_PASSES             35,
+#DEFINE GET_OBJ_PENS                   36,
+#DEFINE GET_OBJ_PROFILE                37,
+#DEFINE GET_OBJ_RECT                   38,
+#DEFINE GET_OBJ_SCAN_CARD_NUM          39,
+#DEFINE GET_OBJ_TYPE                   40,
+#DEFINE GET_OBJ_TYPE_STRING            41,
+#DEFINE GET_OBJ_USE_PENS_FLAG          42,
+#DEFINE GET_OBJ_VECTOR_LIST            43,
+#DEFINE GET_POLYGON_ATTRIBUTES         44,
+#DEFINE GET_READ_STATUS_WORD           45,
+#DEFINE GET_SCAN_CARD_CAPACITY         46,
+;#DEFINE ENABLE_LASER                  47,
+#DEFINE GET_SCAN_CARD_INPUT            48,
+#DEFINE GET_SCAN_HEAD_COUNT            49,
+#DEFINE GET_START_PROCESS_BIT          50,
+#DEFINE GET_TEXT_ATTRIBUTES            51,
+#DEFINE GET_USER_IN_WORD               52,
+#DEFINE GET_VECTOR_GRAPHIC_ATTRIBUTES  53,
+#DEFINE GO_TO_XY                       54,
+#DEFINE IS_IO_CARD_INSTALLED           55,
+#DEFINE IS_OBJ_OUT_OF_BOUNDS           56,
+#DEFINE LOAD_JOB_FROM_FILE             57,
+#DEFINE LOAD_LASER_CONFIG_FILE         58,
+#DEFINE LOAD_LENS_CAL_FILE             59,
+#DEFINE MARK_ALL_OBJ                   60,
+#DEFINE MARK_OBJ                       61,
+#DEFINE MARK_OBJ_EX                    62,
+#DEFINE MOVE_OBJ_IN_LIST               63,
+#DEFINE NEW_BARCODE                    64,
+#DEFINE NEW_BITMAP                     65,
+#DEFINE NEW_DRILL                      66,
+#DEFINE NEW_JOB                        67,
+#DEFINE NEW_LINE                       68,
+#DEFINE NEW_POLYGON                    69,
+#DEFINE NEW_RECT                       70,
+#DEFINE NEW_TEXT                       71,
+#DEFINE NEW_VECTOR_GRAPHIC             72,
+#DEFINE OFFSET_OBJ                     73,
+#DEFINE RELEASE_MARKER                 74
+#DEFINE ROTATE_OBJ                     75,
+#DEFINE ROTATE_OBJ_EX                  76,
+#DEFINE SAVE_JOB_TO_FILE               77,
+#DEFINE SCALE_OBJ                      78,
+#DEFINE SCAN_CARD_COMMAND              79,
+#DEFINE SCAN_CARD_EXECUTE              80,
+#DEFINE SET_ACTIVE_JOB                 81,
+#DEFINE SET_BARCODE_ATTRIBUTES         82,
+#DEFINE SET_BITMAP_ATTRIBUTES          83,
+#DEFINE SET_BUSY_READY_BIT             84,
+#DEFINE SET_DEFAULT_PROFILE            85,
+#DEFINE SET_DRILL_ATTRIBUTES           86,
+#DEFINE SET_JOB_NOTE                   87,
+#DEFINE SET_MARK_IN_PROGRESS_BIT       88,
+#DEFINE SET_MOTF_CONFIG                89,
+#DEFINE SET_OBJ_CHAR_STRING            90,
+#DEFINE SET_OBJ_FILL                   91,
+#DEFINE SET_OBJ_GRAPHIC_FILE           92,
+#DEFINE SET_OBJ_MARK_FILL_FLAG         93,
+#DEFINE SET_OBJ_MARK_MODE              94,
+#DEFINE SET_OBJ_MARK_OUTLINE_FLAG      95,
+#DEFINE SET_OBJ_NAME                   96,
+#DEFINE SET_OBJ_NOTE                   97,
+#DEFINE SET_OBJ_NUM_PASSES             98,
+#DEFINE SET_OBJ_POS                    99,
+#DEFINE SET_OBJ_PROFILE                100,
+#DEFINE SET_OBJ_SCAN_CARD_NUM          101,
+#DEFINE SET_OBJ_SIZE                   102,
+#DEFINE SET_OBJ_TO_RECT                103,
+#DEFINE SET_OBJ_USE_PENS_FLAG          104,
+#DEFINE SET_POLYGON_ATTRIBUTES         105,
+#DEFINE SET_PROCESS_ENABLED_WORD       106,
+#DEFINE SET_SCAN_CARD_OUTPUT           107,
+#DEFINE SET_TEXT_ATTRIBUTES            108,
+#DEFINE SET_VECTOR_GRAPHIC_ATTRIBUTES  109,
+#DEFINE SET_USER_OUT_WORD              110,
+#DEFINE SHOW_TRAY_ICON                 111,
+#DEFINE SKEW_OBJ                       112,
+#DEFINE TERMINATE_MARK                 113
+#DEFINE TURN_LASER_OFF                 114,
+#DEFINE TURN_LASER_ON                  115,
+#DEFINE DO_POWER_CALIBRATE             116,
+#DEFINE GET_OBJ_MUL_MATRIX_STRING      117,
+;
+; Galvo callbacks
+#define GALVO CALLDLL $hgalvo, "AerCBackGalvoControl",
+#define galvo GALVO
+#define SET_GALVO_X_AXIS CALLDLL $hgalvo, "AerCBackGalvoSetX"
+#define set_galvo_x_axis SET_GALVO_X_AXIS
+#define SET_GALVO_Y_AXIS CALLDLL $hgalvo, "AerCBackGalvoSetY"
+#define set_galvo_y_axis SET_GALVO_Y_AXIS
+#define SET_GALVO_Z_AXIS CALLDLL $hgalvo, "AerCBackGalvoSetZ"
+#define set_galvo_z_axis SET_GALVO_Z_AXIS
+#define GALVO_GET_DEBUG_DATA CALLDLL $hgalvo, "AerCBackGalvoGetDebugData"
+#define galvo_get_debug_data GALVO_GET_DEBUG_DATA
+#define GALVO_GET_DEBUG_DATA_BIG CALLDLL $hgalvo, "AerCBackGalvoGetDebugDataBig"
+#define galvo_get_debug_data_big GALVO_GET_DEBUG_DATA_BIG
+#define SET_GALVO_BITS_PER_UNIT CALLDLL $hgalvo, "AerCBackGalvoBitsPerUnit",
+#define set_galvo_bits_per_unit SET_GALVO_BITS_PER_UNIT
+#define GALVO_CLOSE_RTC_DLL CALLDLL $hgalvo, "AerCBackGalvoCloseRTCDll"
+#define galvo_close_rtc_dll GALVO_CLOSE_RTC_DLL
+#define GALVO_OPEN_RTC_DLL CALLDLL $hgalvo, "AerCBackGalvoOpenRTCDll"
+#define galvo_open_rtc_dll GALVO_OPEN_RTC_DLL
+#define GALVO_OPEN_SERVER CALLDLL $hgalvo, "AerCBackGalvoOpenServer"
+#define galvo_open_server GALVO_OPEN_SERVER
+#define GALVO_CLOSE_SERVER CALLDLL $hgalvo, "AerCBackGalvoCloseServer"
+#define galvo_close_server GALVO_CLOSE_SERVER
+#define GALVO_RUN_JOB CALLDLL $hgalvo, "AerCBackGalvoRunJob"
+#define galvo_run_job GALVO_RUN_JOB
+#define GALVO_RUN_JOB_DEBUG CALLDLL $hgalvo, "AerCBackGalvoRunJobDebug"
+#define galvo_run_job_debug GALVO_RUN_JOB_DEBUG
+#define GALVO_RELEASE_SERVER CALLDLL $hgalvo, "AerCBackGalvoReleaseServer"
+#define galvo_release_server GALVO_RELEASE_SERVER
+#define GALVO_ATTACH_SERVER CALLDLL $hgalvo, "AerCBackGalvoAttachServer"
+#define galvo_attach_server GALVO_ATTACH_SERVER
+#define GALVOWL CALLDLL $hgalvo, "AerCBackGalvoControlWL",
+#define galvowl GALVOWL
+#define GALVOWL_FAILED CALLDLL $hgalvo, "AerCBackGalvoWLFailed",
+#define galvowl_failed GALVOWL_FAILED
+;
+; User Error Message define
+#define MMI_USER_ERR 0xE0030000 +
+;
+; Status bit masks
+#define DRIVESTATUS_DRIVE                 0x00000001
+#define DRIVESTATUS_CWLIMIT               0x00000002
+#define DRIVESTATUS_CCWLIMIT              0x00000004
+#define DRIVESTATUS_HOMELIMIT             0x00000008
+#define DRIVESTATUS_MARKER                0x00000010
+#define DRIVESTATUS_HALLA                 0x00000020
+#define DRIVESTATUS_HALLB                 0x00000040
+#define DRIVESTATUS_HALLC                 0x00000080
+#define DRIVESTATUS_SINENCODER_ERR        0x00000100
+#define DRIVESTATUS_COSENCODER_ERR        0x00000200
+#define DRIVESTATUS_ESTOPINPUT            0x00000400
+#define DRIVESTATUS_BRAKEOUTPUT           0x00000800
+#define DRIVESTATUS_SPARE1                0x00001000
+#define DRIVESTATUS_SPARE2                0x00002000
+#define DRIVESTATUS_SOFT_START_DISENGAGE  0x00004000
+#define DRIVESTATUS_CURRENT_CLAMP         0x00008000
+#define DRIVESTATUS_MARKER_LATCH          0x00010000
+#define DRIVESTATUS_PROGRAM_MXH           0x00800000
+#define DRIVESTATUS_BAD_DRIVE_CMD         0x01000000
+#define DRIVESTATUS_INPOSITION            0x02000000
+#define DRIVESTATUS_MOVEACTIVE            0x04000000
+#define DRIVESTATUS_ACCELPHASE            0x08000000
+#define DRIVESTATUS_DECELPHASE            0x10000000
+#define DRIVESTATUS_RESERVED              0x80000000
+;
+#define AXISSTATUS_HOMED              0x00000001
+#define AXISSTATUS_PROFILING          0x00000002
+#define AXISSTATUS_MOVEDONE           0x00000004
+#define AXISSTATUS_CMDVALID           0x00000008
+#define AXISSTATUS_HOMING             0x00000010
+#define AXISSTATUS_DRIVECONTROLLED    0x00000020
+#define AXISSTATUS_SOFTWARE_ESTOP     0x00000040
+#define AXISSTATUS_SOFTWARE_USER      0x00000080
+#define AXISSTATUS_JOGGING            0x00000100
+#define AXISSTATUS_DRIVECONTROL_PEND  0x00000200
+#define AXISSTATUS_SIMUL              0x00000400
+#define AXISSTATUS_VELTIMECONST       0x00000800
+#define AXISSTATUS_INTERRUPT          0x00001000
+#define AXISSTATUS_ALIVE              0x00002000
+#define AXISSTATUS_1DCALIBRATION      0x00004000
+#define AXISSTATUS_2DCALIBRATION      0x00008000
+#define AXISSTATUS_MASTER_SLAVE       0x00010000
+#define AXISSTATUS_SLEW_ACTIVE        0x00020000
+#define AXISSTATUS_BACKLASH_ACTIVE    0x00040000
+#define AXISSTATUS_GAINCALIBRATION    0x00080000   
+#define AXISSTATUS_INPOSITION2        0x00100000   
+#define AXISSTATUS_BLOCKED            0x00200000   
+#define AXISSTATUS_DONE_NOTINPOS      0x00400000
+#define AXISSTATUS_STATUS_CLAMPED     0x00800000
+;
+#define AXISFAULT_POSERR                  0x00000001
+#define AXISFAULT_CURERR                  0x00000002
+#define AXISFAULT_CWHARDLIM               0x00000004
+#define AXISFAULT_CCWHARDLIM              0x00000008
+#define AXISFAULT_CWSOFTLIM               0x00000010
+#define AXISFAULT_CCWSOFTLIM              0x00000020
+#define AXISFAULT_AMPPOWER                0x00000040
+#define AXISFAULT_POSFBK                  0x00000080
+#define AXISFAULT_VELFBK                  0x00000100
+#define AXISFAULT_HALLFBK                 0x00000200   
+#define AXISFAULT_MAXVEL                  0x00000400
+#define AXISFAULT_ESTOP                   0x00000800   
+#define AXISFAULT_MAXVELERR               0x00001000
+#define AXISFAULT_TASK                    0x00002000   
+#define AXISFAULT_PROBE                   0x00004000   
+#define AXISFAULT_AUXILIARY               0x00008000
+#define AXISFAULT_SAFEZONE                0x00010000
+#define AXISFAULT_MOTORTEMP               0x00020000
+#define AXISFAULT_AMPTEMP                 0x00040000
+#define AXISFAULT_EXT_AMP_FAULT           0x00080000
+#define AXISFAULT_COMM_LOST               0x00100000
+;
+#define TASKSTATUS1_ProgramAssociated              0x00000001
+#define TASKSTATUS1_ProgramActive                  0x00000002
+#define TASKSTATUS1_ProgramExecuting               0x00000004
+#define TASKSTATUS1_ImmediateCodeExecuting         0x00000008
+#define TASKSTATUS1_ReturnMotionExecuting          0x00000010
+#define TASKSTATUS1_ProgramAborted                 0x00000020
+#define TASKSTATUS1_SingleStepInto                 0x00000040
+#define TASKSTATUS1_SingleStepOver                 0x00000080
+#define TASKSTATUS1_ProgramReset                   0x00000100
+#define TASKSTATUS1_PendingAxesStop                0x00000200
+#define TASKSTATUS1_EStopActive                    0x00000400
+#define TASKSTATUS1_FeedHoldActive                 0x00000800
+#define TASKSTATUS1_CallBackHoldActive             0x00001000
+#define TASKSTATUS1_CallBackResponding             0x00002000
+#define TASKSTATUS1_SpindleActive1                 0x00004000
+#define TASKSTATUS1_SpindleActive2                 0x00008000
+#define TASKSTATUS1_SpindleActive3                 0x00010000
+#define TASKSTATUS1_SpindleActive4                 0x00020000
+#define TASKSTATUS1_ProbeCycle                     0x00040000
+#define TASKSTATUS1_Retrace                        0x00080000
+#define TASKSTATUS1_Spare1                         0x00100000
+#define TASKSTATUS1_InterruptMotionActive          0x00200000 
+#define TASKSTATUS1_SlewActive                     0x00400000
+#define TASKSTATUS1_CornerRounding                 0x00800000
+#define TASKSTATUS1_ROReq1Active                   0x01000000
+#define TASKSTATUS1_SlewLowFeedModeActive          0x02000000
+#define TASKSTATUS1_CannedFunctionActive           0x04000000
+#define TASKSTATUS1_CannedFunctionExecuting        0x08000000
+;
+#define TASKSTATUS2_MotionModeAbsOffsets           0x00000001
+#define TASKSTATUS2_AsyncG0Aborting                0x00000002
+#define TASKSTATUS2_ProfileQueRunning              0x00000004
+#define TASKSTATUS2_RetraceRequested               0x00000008
+#define TASKSTATUS2_MSOChange                      0x00000010
+#define TASKSTATUS2_SpindleFeedHeld                0x00000020
+#define TASKSTATUS2_FeedHeldAxesStopped            0x00000040
+#define TASKSTATUS2_CutterEnabling                 0x00000080
+#define TASKSTATUS2_CutterDisabling                0x00000100
+#define TASKSTATUS2_CutterOffsetsEnablingPos       0x00000200
+#define TASKSTATUS2_CutterOffsetsEnablingNeg       0x00000400
+#define TASKSTATUS2_CutterOffsetsDisabling         0x00000800
+#define TASKSTATUS2_MFOChange                      0x00001000
+#define TASKSTATUS2_InterruptFaultPending          0x00002000
+#define TASKSTATUS2_Spare6                         0x00004000
+#define TASKSTATUS2_OnGosubPending                 0x00008000
+#define TASKSTATUS2_ProgramAbortPending            0x00010000
+#define TASKSTATUS2_CannedFunctionPending          0x00020000
+#define TASKSTATUS2_NoMFOFloor                     0x00040000
+;
+#define TASKSTATUS3_RotationActive                 0x00000001
+#define TASKSTATUS3_RThetaPolarActive              0x00000002
+#define TASKSTATUS3_RThetaCylindricalActive        0x00000004
+#define TASKSTATUS3_ScalingActive                  0x00000008
+#define TASKSTATUS3_OffsetFixtureActive            0x00000010
+#define TASKSTATUS3_ProfileActive                  0x00000020
+#define TASKSTATUS3_MotionTypePtToPt               0x00000040
+#define TASKSTATUS3_MotionTypeInterp               0x00000080
+#define TASKSTATUS3_MotionTypeProfilePoint         0x00000100
+#define TASKSTATUS3_MotionContinuous               0x00000200
+#define TASKSTATUS3_MotionNoAccel                  0x00000400
+#define TASKSTATUS3_VppActive                      0x00000800
+#define TASKSTATUS3_CutterOffsetsActivePos         0x00001000
+#define TASKSTATUS3_CutterActiveLeft               0x00002000
+#define TASKSTATUS3_CutterActiveRight              0x00004000
+#define TASKSTATUS3_CutterOffsetsActiveNeg         0x00008000
+#define TASKSTATUS3_NormalcyActiveLeft             0x00010000
+#define TASKSTATUS3_NormalcyActiveRight            0x00020000
+#define TASKSTATUS3_NormalcyAlignment              0x00040000
+#define TASKSTATUS3_MotionTypeCW                   0x00080000
+#define TASKSTATUS3_MotionTypeCCW                  0x00100000
+#define TASKSTATUS3_LimitFeedRateActive            0x00200000
+#define TASKSTATUS3_LimitMFOActive                 0x00400000
+#define TASKSTATUS3_Coord1Plane1                   0x00800000
+#define TASKSTATUS3_Coord1Plane2                   0x01000000
+#define TASKSTATUS3_Coord1Plane3                   0x02000000
+#define TASKSTATUS3_Coord2Plane1                   0x04000000
+#define TASKSTATUS3_Coord2Plane2                   0x08000000
+#define TASKSTATUS3_Coord2Plane3                   0x10000000
+#define TASKSTATUS3_MirrorActive                   0x40000000
+;
+#define TASKMODE1_English                          0x00000001
+#define TASKMODE1_Absolute                         0x00000002
+#define TASKMODE1_AccelModeLinear                  0x00000004
+#define TASKMODE1_AccelModeRate                    0x00000008
+#define TASKMODE1_RotaryDominant                   0x00000010
+#define TASKMODE1_MotionContinuous                 0x00000020
+#define TASKMODE1_InverseCircular                  0x00000040
+#define TASKMODE1_SpindleStopOnProgHalt            0x00000080
+#define TASKMODE1_BlockDelete                      0x00000100
+#define TASKMODE1_OptionalStop                     0x00000200
+#define TASKMODE1_BreakPoint                       0x00000400
+#define TASKMODE1_MFOLock                          0x00000800
+#define TASKMODE1_MSOLock                          0x00001000
+#define TASKMODE1_DryRunFeedRate                   0x00002000
+#define TASKMODE1_Retrace                          0x00004000
+#define TASKMODE1_AutoMode                         0x00008000
+#define TASKMODE1_ProgramFeedRateMPU               0x00010000
+#define TASKMODE1_ProgramFeedRateUPR               0x00020000
+#define TASKMODE1_ProgramSFeedRateSurf1            0x00040000
+#define TASKMODE1_ProgramSFeedRateSurf2            0x00080000
+#define TASKMODE1_ProgramSFeedRateSurf3            0x00100000
+#define TASKMODE1_ProgramSFeedRateSurf4            0x00200000
+#define TASKMODE1_BlockDelete2                     0x00400000
+#define TASKMODE1_RunOverMode                      0x00800000
+#define TASKMODE1_MultiBlockLookAhead              0x01000000
+#define TASKMODE1_HighSpeedLookAhead               0x02000000
+#define TASKMODE1_MFOActiveOnJog                   0x04000000
+#define TASKMODE1_WaitForInPos                     0x08000000
+#define TASKMODE1_Minutes                          0x10000000
+#define TASKMODE1_Counts                           0x20000000
+#define TASKMODE1_WaitNone                         0x40000000
+#define TASKMODE1_Spare                            0x80000000  
+;
+#define PROBE_INPUT_DRIVE_DIGITAL                  0x1000000  
+#define PROBE_INPUT_ETHERNET_DIGITAL               0x3000000
+#define PROBE_INPUT_VIRTUAL_BINARY                 0x6000000 
+#define PROBE_INPUT_DRIVE_LATCH1                   0xC000000
+#define PROBE_INPUT_DRIVE_LATCH2                   0xD000000   
+#define PROBE_SW_MODE                              0
+#define PROBE_HW_MODE                              1
+#define AXISCAL_EXPAND_COEFF                       0      	
+#define AXISCAL_CURRENT_EXPAND_COEFF               1
+#define AXISCAL_MATERIAL_TEMP                      2   
+#define AXISCAL_CURRENT_MATERIAL_TEMP              3
+;
+#define AER960RET_PROFILE_QUE_TRANS_INVALID        0xE008202B
+#define AER960RET_PROFILE_QUE_TRANS_ID_MISMATCH    0xE008202C
+;
+#define ANALOG_TRACK_CMD_POS						0   
+#define ANALOG_TRACK_FDBK_POS						1   
+#define ANALOG_TRACK_CMD_VEL						2   
+#define ANALOG_TRACK_FDBK_VEL						3   
+;
+#define LINEAR						G1   
+#define linear						G1   
+#define Linear						G1   
+#define RAPID   				    G0
+#define Rapid   				    G0
+#define rapid   				    G0
+#define CW						G2   
+#define Cw						G2   
+#define cw						G2   
+#define CCW						G3   
+#define Ccw						G3   
+#define ccw						G3                           
+;
+#define VME_16_Bit_Access      						0
+#define VME_32_Bit_Access      						1
+#define VME_8_Bit_Access       						2
+
+#define SOFTLIMIT_MODE_NOT_ACTIVE_UNTIL_HOMED  0x1
+#define SOFTLIMIT_MODE_TARGET_SCANNING         0x2
+#define SOFTLIMIT_MODE_CLAMPING                0x4
+#define SOFTLIMIT_MODE_NO_DRIVE_CHECK          0x8
+
+;
+; Axis Parameters 
+;
+; "Machine"parameters start (do not go down to drive)
+#define Type                                           $PAXIS[0]     ; WARNING: "type" MUST be first axis param
+#define CntsPerEnglishUnit                             $PAXIS[1]     ; WARNING: the "CntsPerEng" MUST be second axis parms (follows type, but precedes everything else)
+#define CntsPerMetricUnit                              $PAXIS[2]     ; WARNING: the "CntsPerMetr" MUST be third axis parms (follows type, but precedes everything else)
+#define CntsPerRotaryUnit                              $PAXIS[3]     ; WARNING: the "CntsPerRota" MUST be fourth axis parms (follows type, but precedes everything else)
+#define RotaryFeedRateScaleFactor                      $PAXIS[4]     ; WARNING: the "RotaryFeedRateScaleFactor" must be fifth axis parm
+#define RolloverDistanceCnts                           $PAXIS[5]
+#define HomeType                                       $PAXIS[6]
+#define HomeDirection                                  $PAXIS[7]
+#define HomeFeedRate                                   $PAXIS[8]
+#define HomeOffset                                     $PAXIS[9]
+#define NumDecimalsEnglish                             $PAXIS[10]
+#define NumDecimalsMetric                              $PAXIS[11]
+#define NumDecimalsRotary                              $PAXIS[12]
+#define AxisState                                      $PAXIS[13]
+#define ControllingTask                                $PAXIS[14]
+#define PositionUnits                                  $PAXIS[15]
+#define PositionCmdUnits                               $PAXIS[16]
+#define PositionProgCmdUnits                           $PAXIS[17]
+#define AvgVelTimeMsec                                 $PAXIS[18]
+#define ScaleFactor                                    $PAXIS[19]
+#define PositionProgUnits                              $PAXIS[20]
+#define FixtureOffset1                                 $PAXIS[21]
+#define FixtureOffset2                                 $PAXIS[22]
+#define FixtureOffset3                                 $PAXIS[23]
+#define FixtureOffset4                                 $PAXIS[24]
+#define FixtureOffset5                                 $PAXIS[25]
+#define FixtureOffset6                                 $PAXIS[26]
+#define JogDistance                                    $PAXIS[27]
+#define JogVelocity                                    $PAXIS[28]
+#define UnusedAxis                                     $PAXIS[29]
+#define ReverseSlewDir                                 $PAXIS[30]
+#define VelTimeConst                                   $PAXIS[31]
+#define Clock                                          $PAXIS[32]
+#define MaxFeedRate                                    $PAXIS[33]
+#define RapidFeedRate                                  $PAXIS[34]
+#define AccelModeAxis                                  $PAXIS[35]
+#define DecelModeAxis                                  $PAXIS[36]
+#define AccelRateAxis                                  $PAXIS[37]
+#define DecelRateAxis                                  $PAXIS[38]
+#define AccelTimeSecAxis                               $PAXIS[39]
+#define DecelTimeSecAxis                               $PAXIS[40]
+#define PositionCnts                                   $PAXIS[41]
+#define PositionCmdCnts                                $PAXIS[42]
+#define Fault                                          $PAXIS[43]
+#define DriveStatus                                    $PAXIS[44]
+#define AxisStatus                                     $PAXIS[45]
+#define CalDisable1D                                   $PAXIS[46]
+#define SlaveAdvance                                   $PAXIS[47]
+#define SlaveOffset                                    $PAXIS[48]
+#define GearMaster                                     $PAXIS[49]
+#define GearSlave                                      $PAXIS[50]
+#define GearMode                                       $PAXIS[51]
+#define VelocityCntsSecAvg                             $PAXIS[52]
+#define ATAmplitude                                    $PAXIS[53]
+#define ATStartFrequency                               $PAXIS[54]
+#define ATBandWidth                                    $PAXIS[55]
+#define ATDamping                                      $PAXIS[56]
+#define ATPhaseMargin                                  $PAXIS[57]
+#define JoyStickLowFeedRate                            $PAXIS[58]
+#define JoyStickHighFeedRate                           $PAXIS[59]
+#define HomeAccelDecelRateAxis                         $PAXIS[60]
+#define AffDecelScale                                  $PAXIS[61]
+#define SafeLimitMode                                  $PAXIS[62]
+#define SafeZoneCWCnts                                 $PAXIS[63]
+#define SafeZoneCCWCnts                                $PAXIS[64]
+#define PositionExtUnits                               $PAXIS[65]
+#define PositionExtCnts                                $PAXIS[66]
+#define SoftLimitMode                                  $PAXIS[67]
+#define PositionErrUnits                               $PAXIS[68]
+#define PositionErrCnts                                $PAXIS[69]
+#define EnableGainCalibration                          $PAXIS[70]
+#define InPos2PeakToPeakError                          $PAXIS[71]
+#define InPos2WindowLengthMsec                         $PAXIS[72]
+#define HomePositionSet                                $PAXIS[73]
+#define CalBackLashTimeConst                           $PAXIS[74]
+
+; "machine" parameters end
+#define LAST_AXISPARM_MACH_PARAM           100
+
+; "drive" parameters start (do go down to drive)
+#define ServoUpdateRate                                $PAXIS[0 + LAST_AXISPARM_MACH_PARAM]
+#define ServoMask                                      $PAXIS[1 + LAST_AXISPARM_MACH_PARAM]
+#define GainKpos                                       $PAXIS[2 + LAST_AXISPARM_MACH_PARAM]
+#define GainKi                                         $PAXIS[3 + LAST_AXISPARM_MACH_PARAM]
+#define GainKp                                         $PAXIS[4 + LAST_AXISPARM_MACH_PARAM]
+#define GainVff                                        $PAXIS[5 + LAST_AXISPARM_MACH_PARAM]
+#define GainAff                                        $PAXIS[6 + LAST_AXISPARM_MACH_PARAM]
+#define GainKv                                         $PAXIS[7 + LAST_AXISPARM_MACH_PARAM]
+#define GainKpi                                        $PAXIS[8 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent1N0                                 $PAXIS[9 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent1N1                                 $PAXIS[10 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent1N2                                 $PAXIS[11 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent1D1                                 $PAXIS[12 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent1D2                                 $PAXIS[13 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent2N0                                 $PAXIS[14 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent2N1                                 $PAXIS[15 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent2N2                                 $PAXIS[16 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent2D1                                 $PAXIS[17 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent2D2                                 $PAXIS[18 + LAST_AXISPARM_MACH_PARAM]
+#define IGainDTimeUsec                                 $PAXIS[19 + LAST_AXISPARM_MACH_PARAM]
+#define IGainDTimeCorrectUSec                          $PAXIS[20 + LAST_AXISPARM_MACH_PARAM]
+#define IGainK                                         $PAXIS[21 + LAST_AXISPARM_MACH_PARAM]
+#define GainReserved                                   $PAXIS[22 + LAST_AXISPARM_MACH_PARAM]
+#define IGainKi                                        $PAXIS[23 + LAST_AXISPARM_MACH_PARAM]
+#define IGainKp                                        $PAXIS[24 + LAST_AXISPARM_MACH_PARAM]
+#define IGainIaOffset                                  $PAXIS[25 + LAST_AXISPARM_MACH_PARAM]
+#define IGainIbOffset                                  $PAXIS[26 + LAST_AXISPARM_MACH_PARAM]
+#define IGainVaOffset                                  $PAXIS[27 + LAST_AXISPARM_MACH_PARAM]
+#define IGainVbOffset                                  $PAXIS[28 + LAST_AXISPARM_MACH_PARAM]
+#define IGainVcOffset                                  $PAXIS[29 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMask                                      $PAXIS[30 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMaskDisable                               $PAXIS[31 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMaskDecel                                 $PAXIS[32 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMaskStop                                  $PAXIS[33 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMaskInterrupt                             $PAXIS[34 + LAST_AXISPARM_MACH_PARAM]
+#define BrakeOnDriveDisable                            $PAXIS[35 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMaskAux                                   $PAXIS[36 + LAST_AXISPARM_MACH_PARAM]
+#define FaultEStopInput                                $PAXIS[37 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdPosErr                                $PAXIS[38 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdAvgIAmp                               $PAXIS[39 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdAvgITimeMsec                          $PAXIS[40 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdVelCmd                                $PAXIS[41 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdVelError                              $PAXIS[42 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdSoftCCW                               $PAXIS[43 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdSoftCW                                $PAXIS[44 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdClampIAmp                             $PAXIS[45 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdInPosDist                             $PAXIS[46 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotType                                     $PAXIS[47 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotCyclesRev                                $PAXIS[48 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotCntsRev                                  $PAXIS[49 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotCntsInternal                             $PAXIS[50 + LAST_AXISPARM_MACH_PARAM]     ; MUST follow AXISPARM_CfgMotCntsRev AND AXISPARM_CfgMotCyclesRev
+#define CfgMotOffsetAng                                $PAXIS[51 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotMSetTimeMsec                             $PAXIS[52 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotMSetIAmps                                $PAXIS[53 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkPosType                                  $PAXIS[54 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkPosChan                                  $PAXIS[55 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkPosMultiplier                            $PAXIS[56 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkVelType                                  $PAXIS[57 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkVelChan                                  $PAXIS[58 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkVelMultiplier                            $PAXIS[59 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncMxhSetup                              $PAXIS[60 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncMultFactorMXH                         $PAXIS[61 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncMultFactorMXU                         $PAXIS[62 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncSineGain                              $PAXIS[63 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncSineOffset                            $PAXIS[64 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncCosGain                               $PAXIS[65 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncCosOffset                             $PAXIS[66 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncPhase                                 $PAXIS[67 + LAST_AXISPARM_MACH_PARAM]
+#define CfgGantryMasterAxis                            $PAXIS[68 + LAST_AXISPARM_MACH_PARAM]
+#define CfgGantrySlaveAxis                             $PAXIS[69 + LAST_AXISPARM_MACH_PARAM]
+#define InetDriveIPAddress                             $PAXIS[70 + LAST_AXISPARM_MACH_PARAM]
+#define InetDriveSubnetMask                            $PAXIS[71 + LAST_AXISPARM_MACH_PARAM]
+#define InetDriveGateway                               $PAXIS[72 + LAST_AXISPARM_MACH_PARAM]
+#define InetIOIPAddress                                $PAXIS[73 + LAST_AXISPARM_MACH_PARAM]
+#define InetIOSubnetMask                               $PAXIS[74 + LAST_AXISPARM_MACH_PARAM]
+#define InetIOGateway                                  $PAXIS[75 + LAST_AXISPARM_MACH_PARAM]
+#define InetDefNumInputWords                           $PAXIS[76 + LAST_AXISPARM_MACH_PARAM]
+#define InetDefNumOutputWords                          $PAXIS[77 + LAST_AXISPARM_MACH_PARAM]
+#define InetDefNumInputBits                            $PAXIS[78 + LAST_AXISPARM_MACH_PARAM]
+#define InetDefNumOutputBits                           $PAXIS[79 + LAST_AXISPARM_MACH_PARAM]
+#define InetDefNumInputProcess                         $PAXIS[80 + LAST_AXISPARM_MACH_PARAM]
+#define InetDefNumOutputProcess                        $PAXIS[81 + LAST_AXISPARM_MACH_PARAM]
+#define InetConfigFlags                                $PAXIS[82 + LAST_AXISPARM_MACH_PARAM]
+#define DecelRateMoveAbort                             $PAXIS[83 + LAST_AXISPARM_MACH_PARAM]
+#define LimitDecelDistCnts                             $PAXIS[84 + LAST_AXISPARM_MACH_PARAM]
+#define LimitDebounceTimeMsec                          $PAXIS[85 + LAST_AXISPARM_MACH_PARAM]
+#define LimitLevelMask                                 $PAXIS[86 + LAST_AXISPARM_MACH_PARAM]
+#define BacklashDistCnts                               $PAXIS[87 + LAST_AXISPARM_MACH_PARAM]
+#define AuxOutBitMask                                  $PAXIS[88 + LAST_AXISPARM_MACH_PARAM]
+#define AuxOutBitLevel                                 $PAXIS[89 + LAST_AXISPARM_MACH_PARAM]
+#define DriveIOConfig                                  $PAXIS[90 + LAST_AXISPARM_MACH_PARAM]
+#define BrakeOutput                                    $PAXIS[91 + LAST_AXISPARM_MACH_PARAM]
+#define PsoSsi1Config                                  $PAXIS[92 + LAST_AXISPARM_MACH_PARAM]
+#define PsoSsi2Config                                  $PAXIS[93 + LAST_AXISPARM_MACH_PARAM]
+#define PsoMrk1Config                                  $PAXIS[94 + LAST_AXISPARM_MACH_PARAM]
+#define PsoMrk2Config                                  $PAXIS[95 + LAST_AXISPARM_MACH_PARAM]
+#define PsoMrk3Config                                  $PAXIS[96 + LAST_AXISPARM_MACH_PARAM]
+#define EncoderDivider                                 $PAXIS[97 + LAST_AXISPARM_MACH_PARAM]
+#define FaultAuxInput                                  $PAXIS[98 + LAST_AXISPARM_MACH_PARAM]
+#define FaultDisableDelay                              $PAXIS[99 + LAST_AXISPARM_MACH_PARAM]
+#define CfgGantryMode                                  $PAXIS[100 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotStepperRes                               $PAXIS[101 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotStepperHighCur                           $PAXIS[102 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotStepperLowCur                            $PAXIS[103 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotStepperDGain                             $PAXIS[104 + LAST_AXISPARM_MACH_PARAM]
+#define CfgPhsAdvMaxAngle                              $PAXIS[105 + LAST_AXISPARM_MACH_PARAM]
+#define CfgPhsAdvMaxVel                                $PAXIS[106 + LAST_AXISPARM_MACH_PARAM]
+#define CfgPhsAdvSegAngle                              $PAXIS[107 + LAST_AXISPARM_MACH_PARAM]
+#define CfgPhsAdvSegVel                                $PAXIS[108 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncQuadDivider                           $PAXIS[109 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncQuadChan                              $PAXIS[110 + LAST_AXISPARM_MACH_PARAM]
+#define GainDff                                        $PAXIS[111 + LAST_AXISPARM_MACH_PARAM]
+#define GainSFComp                                     $PAXIS[112 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent3N0                                 $PAXIS[113 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent3N1                                 $PAXIS[114 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent3N2                                 $PAXIS[115 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent3D1                                 $PAXIS[116 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent3D2                                 $PAXIS[117 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent4N0                                 $PAXIS[118 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent4N1                                 $PAXIS[119 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent4N2                                 $PAXIS[120 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent4D1                                 $PAXIS[121 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent4D2                                 $PAXIS[122 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkRDGain                                   $PAXIS[123 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkRDCosPhase                               $PAXIS[124 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkRDConfig                                 $PAXIS[125 + LAST_AXISPARM_MACH_PARAM]
+#define ExtAmpMaxCurrent                               $PAXIS[126 + LAST_AXISPARM_MACH_PARAM]
+#define LimitDebounceDistCnts                          $PAXIS[127 + LAST_AXISPARM_MACH_PARAM]
+#define CfgEnableDelay                                 $PAXIS[128 + LAST_AXISPARM_MACH_PARAM]
+#define CfgMotStepperVerSpeed                          $PAXIS[129 + LAST_AXISPARM_MACH_PARAM]
+#define ThresholdInPosTimeMSec                         $PAXIS[130 + LAST_AXISPARM_MACH_PARAM]
+#define CfgFbkEncMxMrkLoc                              $PAXIS[131 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent5N0                                 $PAXIS[132 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent5N1                                 $PAXIS[133 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent5N2                                 $PAXIS[134 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent5D1                                 $PAXIS[135 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent5D2                                 $PAXIS[136 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent6N0                                 $PAXIS[137 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent6N1                                 $PAXIS[138 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent6N2                                 $PAXIS[139 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent6D1                                 $PAXIS[140 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent6D2                                 $PAXIS[141 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent7N0                                 $PAXIS[142 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent7N1                                 $PAXIS[143 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent7N2                                 $PAXIS[144 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent7D1                                 $PAXIS[145 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent7D2                                 $PAXIS[146 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent8N0                                 $PAXIS[147 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent8N1                                 $PAXIS[148 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent8N2                                 $PAXIS[149 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent8D1                                 $PAXIS[150 + LAST_AXISPARM_MACH_PARAM]
+#define FiltCurrent8D2                                 $PAXIS[151 + LAST_AXISPARM_MACH_PARAM]
+#define EnableGainScaling                              $PAXIS[152 + LAST_AXISPARM_MACH_PARAM]
+#define GainScaleThreshLow                             $PAXIS[153 + LAST_AXISPARM_MACH_PARAM]
+#define GainScaleThreshHigh                            $PAXIS[154 + LAST_AXISPARM_MACH_PARAM]
+#define GainKpos2                                      $PAXIS[155 + LAST_AXISPARM_MACH_PARAM]
+#define GainKi2                                        $PAXIS[156 + LAST_AXISPARM_MACH_PARAM]
+#define GainKp2                                        $PAXIS[157 + LAST_AXISPARM_MACH_PARAM]
+#define GainKpi2                                       $PAXIS[158 + LAST_AXISPARM_MACH_PARAM]
+#define FaultMaskDisableDelay                          $PAXIS[159 + LAST_AXISPARM_MACH_PARAM]
+#define InPosDisableTimeoutMsec                        $PAXIS[160 + LAST_AXISPARM_MACH_PARAM]
+#define BrakeDisableDelay                              $PAXIS[161 + LAST_AXISPARM_MACH_PARAM]
+#define GainScaleThreshLow2                            $PAXIS[162 + LAST_AXISPARM_MACH_PARAM]
+#define GainScaleThreshHigh2                           $PAXIS[163 + LAST_AXISPARM_MACH_PARAM]
+#define GainKpos3                                      $PAXIS[164 + LAST_AXISPARM_MACH_PARAM]
+#define GainKi3                                        $PAXIS[165 + LAST_AXISPARM_MACH_PARAM]
+#define GainKp3                                        $PAXIS[166 + LAST_AXISPARM_MACH_PARAM]
+#define GainKpi3                                       $PAXIS[167 + LAST_AXISPARM_MACH_PARAM]
+#define CfgGantryCurrLimit                             $PAXIS[168 + LAST_AXISPARM_MACH_PARAM]
+#define CfgGantryDiffPosLimit                          $PAXIS[169 + LAST_AXISPARM_MACH_PARAM]
+
+;
+; Task Parameters 
+;
+#define Number                               $PTASK[0]
+#define TaskFault                            $PTASK[1]
+#define TaskWarning                          $PTASK[2]
+#define BoundAxesMask                        $PTASK[3]
+#define DisplayAxesMask                      $PTASK[4]
+#define RotateX                              $PTASK[5]
+#define RotateY                              $PTASK[6]
+#define RotateAngleDeg                       $PTASK[7]
+#define RThetaX                              $PTASK[8]
+#define RThetaY                              $PTASK[9]
+#define RThetaR                              $PTASK[10]
+#define RThetaT                              $PTASK[11]
+#define RThetaRadius                         $PTASK[12]
+#define RThetaEnabled                        $PTASK[13]
+#define AccelRateLinear                      $PTASK[14]
+#define DecelRateLinear                      $PTASK[15]
+#define AccelRateRotary                      $PTASK[16]
+#define DecelRateRotary                      $PTASK[17]
+#define AccelTimeSec                         $PTASK[18]
+#define DecelTimeSec                         $PTASK[19]
+#define DecelOnProgramAbortMask              $PTASK[20]
+#define FeedRateLinear                       $PTASK[21]
+#define FeedRateRotary                       $PTASK[22]
+#define FeedRateLinearDefault                $PTASK[23]
+#define FeedRateRotaryDefault                $PTASK[24]
+#define DryRunFeedRateLinear                 $PTASK[25]
+#define DryRunFeedRateRotary                 $PTASK[26]
+#define FeedRateLinearActual                 $PTASK[27]
+#define FeedRateRotaryActual                 $PTASK[28]
+#define BlendMaxAccelLinearIPS2              $PTASK[29]
+#define BlendMaxAccelRotaryDPS2              $PTASK[30]
+#define BlendMaxAccelCircleIPS2              $PTASK[31]
+#define MaxLookAheadMoves                    $PTASK[32]
+#define MFO                                  $PTASK[33]
+#define UserFeedRateMode                     $PTASK[34]
+#define FeedHold                             $PTASK[35]
+#define Coord1I                              $PTASK[36]
+#define Coord1J                              $PTASK[37]
+#define Coord1K                              $PTASK[38]
+#define Coord1Plane                          $PTASK[39]
+#define Coord2I                              $PTASK[40]
+#define Coord2J                              $PTASK[41]
+#define Coord2K                              $PTASK[42]
+#define Coord2Plane                          $PTASK[43]
+#define MaxRadiusAdjustDeg                   $PTASK[44]
+#define MaxRadiusError                       $PTASK[45]
+#define CutterX                              $PTASK[46]
+#define CutterY                              $PTASK[47]
+#define CutterZ                              $PTASK[48]
+#define CutterLength                         $PTASK[49]
+#define CutterWear                           $PTASK[50]
+#define CutterRadius                         $PTASK[51]
+#define CutterOffsetX                        $PTASK[52]
+#define CutterOffsetY                        $PTASK[53]
+#define CutterActive                         $PTASK[54]
+#define CutterToleranceDeg                   $PTASK[55]
+#define NormalcyX                            $PTASK[56]
+#define NormalcyY                            $PTASK[57]
+#define NormalcyAxis                         $PTASK[58]
+#define NormalcyToleranceDeg                 $PTASK[59]
+#define Status1                              $PTASK[60]
+#define Status2                              $PTASK[61]
+#define Status3                              $PTASK[62]
+#define Mode1                                $PTASK[63]
+#define ErrCode                              $PTASK[64]
+#define HaltTaskOnAxisFault                  $PTASK[65]
+#define InterruptMotion                      $PTASK[66]
+#define InterruptMotionReturnType            $PTASK[67]
+#define SoftEStopInput                       $PTASK[68]
+#define FeedHoldInput                        $PTASK[69]
+#define FeedHoldEdgeInput                    $PTASK[70]
+#define AnalogMFOInput                       $PTASK[71]
+#define S1_AnalogMSOInput                    $PTASK[72]
+#define S2_AnalogMSOInput                    $PTASK[73]
+#define S3_AnalogMSOInput                    $PTASK[74]
+#define S4_AnalogMSOInput                    $PTASK[75]
+#define S1_Index                             $PTASK[76]     ; These MUST be alternating consective: Index,Feedrate, Index,Feedrate, Etc.
+#define S1_FeedRate                          $PTASK[77]
+#define S2_Index                             $PTASK[78]
+#define S2_FeedRate                          $PTASK[79]
+#define S3_Index                             $PTASK[80]
+#define S3_FeedRate                          $PTASK[81]
+#define S4_Index                             $PTASK[82]
+#define S4_FeedRate                          $PTASK[83]
+#define S1_MSO                               $PTASK[84]     ; MMI needs spindle MSO's to be consecutive numbered
+#define S2_MSO                               $PTASK[85]
+#define S3_MSO                               $PTASK[86]
+#define S4_MSO                               $PTASK[87]
+#define S1_SpindleRadialAxis                 $PTASK[88]
+#define S2_SpindleRadialAxis                 $PTASK[89]
+#define S3_SpindleRadialAxis                 $PTASK[90]
+#define S4_SpindleRadialAxis                 $PTASK[91]
+#define ROReq1                               $PTASK[92]
+#define RIAction1                            $PTASK[93]
+#define ROAction1                            $PTASK[94]
+#define ROReq1Mask                           $PTASK[95]
+#define RIActionOpCode                       $PTASK[96]
+#define RIActionAxis                         $PTASK[97]
+#define RIActionParm1                        $PTASK[98]
+#define RIActionParm2                        $PTASK[99]
+#define ActiveFixtureOffset                  $PTASK[100]
+#define MaxCallStack                         $PTASK[101]
+#define MaxModeStack                         $PTASK[102]
+#define NumTaskDoubles                       $PTASK[103]
+#define NumTaskStrings                       $PTASK[104]
+#define NumTaskAxisPts                       $PTASK[105]
+#define MaxMonitorData                       $PTASK[106]
+#define MaxOnGosubData                       $PTASK[107]
+#define UpdateTimeSec                        $PTASK[108]
+#define UpdateNumEntries                     $PTASK[109]
+#define ExecuteNumLines                      $PTASK[110]
+#define ExecuteNumMonitors                   $PTASK[111]
+#define ExecuteNumSpindles                   $PTASK[112]
+#define JogPair1EnableIn                     $PTASK[113]
+#define JogPair1Mode                         $PTASK[114]
+#define JogPair1Axis1                        $PTASK[115]
+#define JogPair1Axis1PlusIn                  $PTASK[116]
+#define JogPair1Axis1MinusIn                 $PTASK[117]
+#define JogPair1Axis2                        $PTASK[118]
+#define JogPair1Axis2PlusIn                  $PTASK[119]
+#define JogPair1Axis2MinusIn                 $PTASK[120]
+#define JogPair2EnableIn                     $PTASK[121]
+#define JogPair2Mode                         $PTASK[122]
+#define JogPair2Axis1                        $PTASK[123]
+#define JogPair2Axis1PlusIn                  $PTASK[124]
+#define JogPair2Axis1MinusIn                 $PTASK[125]
+#define JogPair2Axis2                        $PTASK[126]
+#define JogPair2Axis2PlusIn                  $PTASK[127]
+#define JogPair2Axis2MinusIn                 $PTASK[128]
+#define JoyStickDeadband                     $PTASK[129]
+#define SlewPair1                            $PTASK[130]
+#define SlewPair2                            $PTASK[131]
+#define SlewPair3                            $PTASK[132]
+#define SlewPair4                            $PTASK[133]
+#define SlewPair5                            $PTASK[134]
+#define SlewPair6                            $PTASK[135]
+#define SlewPair7                            $PTASK[136]
+#define SlewPair8                            $PTASK[137]
+#define LineNumberUser                       $PTASK[138]
+#define LineNumberSMC                        $PTASK[139]
+#define CannedFunctionID                     $PTASK[140]
+#define IgnoreAxesMask                       $PTASK[141]
+#define ChordicalToleranceInch               $PTASK[142]
+#define ChordicalSlowdownMsec                $PTASK[143]
+#define CommandVelocityVariance              $PTASK[144]
+#define Group1GCodeMode                      $PTASK[145]
+#define SlewPair1Invert                      $PTASK[146]
+#define SlewPair2Invert                      $PTASK[147]
+#define SlewPair3Invert                      $PTASK[148]
+#define SlewPair4Invert                      $PTASK[149]
+#define SlewPair5Invert                      $PTASK[150]
+#define SlewPair6Invert                      $PTASK[151]
+#define SlewPair7Invert                      $PTASK[152]
+#define SlewPair8Invert                      $PTASK[153]
+#define JoyStickAnalogHorizInput             $PTASK[154]
+#define JoyStickAnalogVertInput              $PTASK[155]
+#define JoyStickDigitalAxisPairSelInput      $PTASK[156]
+#define JoyStickDigitalFeedRateSelInput      $PTASK[157]
+#define JoyStickDigitalInterlockInput        $PTASK[158]
+#define JoyStickMinVoltage                   $PTASK[159]
+#define JoyStickMaxVoltage                   $PTASK[160]
+#define Slew3DAxisMask1                      $PTASK[161]
+#define Slew3DAxisMask2                      $PTASK[162]
+#define Slew3DAxisMask3                      $PTASK[163]
+#define Slew3DAxisMask4                      $PTASK[164]
+#define Slew3DAxisMask5                      $PTASK[165]
+#define Slew3DAxisMask6                      $PTASK[166]
+#define Slew3DAxisMask7                      $PTASK[167]
+#define Slew3DAxisMask8                      $PTASK[168]
+#define Slew3DConfig1                        $PTASK[169]
+#define Slew3DConfig2                        $PTASK[170]
+#define Slew3DConfig3                        $PTASK[171]
+#define Slew3DConfig4                        $PTASK[172]
+#define Slew3DConfig5                        $PTASK[173]
+#define Slew3DConfig6                        $PTASK[174]
+#define Slew3DConfig7                        $PTASK[175]
+#define Slew3DConfig8                        $PTASK[176]
+#define JoyStickAnalog3DInput                $PTASK[177]
+#define PciIODelayMode                       $PTASK[178]
+#define AnalogMFOMinInputVoltage             $PTASK[179]
+#define AnalogMFOMaxInputVoltage             $PTASK[180]
+#define MFOMax                               $PTASK[181]
+#define JoyStickVertMinVoltage               $PTASK[182]
+#define JoyStickVertMaxVoltage               $PTASK[183]
+#define JoyStickVertDeadband                 $PTASK[184]
+#define JoyStick3DMinVoltage                 $PTASK[185]
+#define JoyStick3DMaxVoltage                 $PTASK[186]
+#define JoyStick3DDeadband                   $PTASK[187]
+#define MFOMin                               $PTASK[188]
+#define DwellPercentComplete                 $PTASK[189]
+#define WaitTimeMsec                         $PTASK[190]
+#define MFOStep                              $PTASK[191]
+#define DfltSCurve                           $PTASK[192]
+
+;
+; Global Parameters 
+;
+#define AvgPollTimeSec                       $PGLOB[0]
+#define Version                              $PGLOB[1]
+#define NumGlobalDoubles                     $PGLOB[2]
+#define NumGlobalStrings                     $PGLOB[3]
+#define NumGlobalAxisPts                     $PGLOB[4]
+#define CallBackTimeoutSec                   $PGLOB[5]
+#define BuildNumber                          $PGLOB[6]
+#define UserMode                             $PGLOB[7]
+#define ThrowTaskWarningsAsFaults            $PGLOB[8]
+#define Enable2DCalibration                  $PGLOB[9]
+#define NumCannedFunctions                   $PGLOB[10]
+#define CompatibilityMode                    $PGLOB[11]
+#define NumDecimalsCompare                   $PGLOB[12]
+#define CNCMeasurementMode                   $PGLOB[13]
+#define MaxNPlotAxes                         $PGLOB[14]
+#define PositionsDisplayMask                 $PGLOB[15]
+#define InetGlobalIOIPAddress                $PGLOB[16]
+#define InetGlobalIOSubnetMask               $PGLOB[17]
+#define InetGlobalIOGateway                  $PGLOB[18]
+#define InetGlobalDefNumInputWords           $PGLOB[19]
+#define InetGlobalDefNumOutputWords          $PGLOB[20]
+#define InetGlobalDefNumInputBits            $PGLOB[21]
+#define InetGlobalDefNumOutputBits           $PGLOB[22]
+#define InetGlobalDefNumInputProcess         $PGLOB[23]
+#define InetGlobalDefNumOutputProcess        $PGLOB[24]
+#define InetGlobalConfigFlags                $PGLOB[25]
+#define InetGlobalInputBitsStart             $PGLOB[26]
+#define InetGlobalOutputBitsStart            $PGLOB[27]
+#define InetGlobalOutputBitsStatusStart      $PGLOB[28]
+#define InetGlobalInputWordsStart            $PGLOB[29]
+#define InetGlobalOutputWordsStart           $PGLOB[30]
+#define InetGlobalOutputWordsStatusStart     $PGLOB[31]
+#define InetGlobalInputProcessStart          $PGLOB[32]
+#define InetGlobalOutputProcessStart         $PGLOB[33]
+#define NumDrivesRequired                    $PGLOB[34]
+#define ClockResMultiplier                   $PGLOB[35]
+#define 1394CommLostNumber                   $PGLOB[36]
+#define MaxNPlotPoints                       $PGLOB[37]
+
+;
+; Fiber Parameters 
+;
+#define HCScanIncrement                      $PFIBER[0]
+#define HCMaxDisplacement                    $PFIBER[1]
+#define HCThreshold                          $PFIBER[2]
+#define HCAxis                               $PFIBER[3]
+#define HCInputMode                          $PFIBER[4]
+#define HCInputChannelNum                    $PFIBER[5]
+#define HCInvertSearch                       $PFIBER[6]
+#define HCWholeWindow                        $PFIBER[7]
+#define HCDataSaveMode                       $PFIBER[8]
+#define HCDelayTime                          $PFIBER[9]
+#define SRMaxRadius                          $PFIBER[10]
+#define SRNumSpirals                         $PFIBER[11]
+#define SRSegmentLength                      $PFIBER[12]
+#define SRThreshold                          $PFIBER[13]
+#define SRAxis1                              $PFIBER[14]
+#define SRAxis2                              $PFIBER[15]
+#define SRInputMode                          $PFIBER[16]
+#define SRInputChannelNum                    $PFIBER[17]
+#define SRInvertSearch                       $PFIBER[18]
+#define SRMotionType                         $PFIBER[19]
+#define SRDataSaveMode                       $PFIBER[20]
+#define SRDelayTime                          $PFIBER[21]
+#define SFEndRadius                          $PFIBER[22]
+#define SFNumSpirals                         $PFIBER[23]
+#define SFSegmentLength                      $PFIBER[24]
+#define SFAxis1                              $PFIBER[25]
+#define SFAxis2                              $PFIBER[26]
+#define SFInputMode                          $PFIBER[27]
+#define SFInputChannelNum                    $PFIBER[28]
+#define SFInvertSearch                       $PFIBER[29]
+#define SFMotionType                         $PFIBER[30]
+#define SFDataSaveMode                       $PFIBER[31]
+#define SFDelayTime                          $PFIBER[32]
+#define FASelectAxis1                        $PFIBER[33]
+#define FASelectAxis2                        $PFIBER[34]
+#define FASelectAxis3                        $PFIBER[35]
+#define FASelectAxis4                        $PFIBER[36]
+#define FASelectAxis5                        $PFIBER[37]
+#define FASelectAxis6                        $PFIBER[38]
+#define FAOffsetAxis1                        $PFIBER[39]
+#define FAOffsetAxis2                        $PFIBER[40]
+#define FAOffsetAxis3                        $PFIBER[41]
+#define FAOffsetAxis4                        $PFIBER[42]
+#define FAOffsetAxis5                        $PFIBER[43]
+#define FAOffsetAxis6                        $PFIBER[44]
+#define FAPosLimitAxis1                      $PFIBER[45]
+#define FAPosLimitAxis2                      $PFIBER[46]
+#define FAPosLimitAxis3                      $PFIBER[47]
+#define FAPosLimitAxis4                      $PFIBER[48]
+#define FAPosLimitAxis5                      $PFIBER[49]
+#define FAPosLimitAxis6                      $PFIBER[50]
+#define FANegLimitAxis1                      $PFIBER[51]
+#define FANegLimitAxis2                      $PFIBER[52]
+#define FANegLimitAxis3                      $PFIBER[53]
+#define FANegLimitAxis4                      $PFIBER[54]
+#define FANegLimitAxis5                      $PFIBER[55]
+#define FANegLimitAxis6                      $PFIBER[56]
+#define FATermTolerance                      $PFIBER[57]
+#define FAMaxNumIterations                   $PFIBER[58]
+#define FASaturationValue                    $PFIBER[59]
+#define FAReturnToStart                      $PFIBER[60]
+#define FAInputMode                          $PFIBER[61]
+#define FAInputChannelNum                    $PFIBER[62]
+#define FAInvertSearch                       $PFIBER[63]
+#define FADelayTime                          $PFIBER[64]
+#define GCScanSize                           $PFIBER[65]
+#define GCScanIncrement                      $PFIBER[66]
+#define GCScanLines                          $PFIBER[67]
+#define GCEdgeValue                          $PFIBER[68]
+#define GCAxis1                              $PFIBER[69]
+#define GCAxis2                              $PFIBER[70]
+#define GCInputMode                          $PFIBER[71]
+#define GCInputChannelNum                    $PFIBER[72]
+#define GCInvertSearch                       $PFIBER[73]
+#define GCSingleRasterMode                   $PFIBER[74]
+#define GCMotionType                         $PFIBER[75]
+#define GCDataSaveMode                       $PFIBER[76]
+#define GCDelayTime                          $PFIBER[77]
+#define CMaxDisplacement1                    $PFIBER[78]
+#define CMaxDisplacement2                    $PFIBER[79]
+#define CMaxDisplacement3                    $PFIBER[80]
+#define CScanIncrement                       $PFIBER[81]
+#define CEdgeValue                           $PFIBER[82]
+#define CAxis1                               $PFIBER[83]
+#define CAxis2                               $PFIBER[84]
+#define CAxis3                               $PFIBER[85]
+#define CInputMode                           $PFIBER[86]
+#define CInputChannelNum                     $PFIBER[87]
+#define CInvertSearch                        $PFIBER[88]
+#define CReturnToCenter                      $PFIBER[89]
+#define CDataSaveMode                        $PFIBER[90]
+#define CDelayTime                           $PFIBER[91]
+#define HCPercentDrop                        $PFIBER[92]
+
+;
+; VPP Parameters 
+;
+#define VPP_Model                            $PVPP[0]
+#define VPP_FixedToolTip                     $PVPP[1]
+#define VPP_UserToolTip                      $PVPP[2]
+#define VPP_SecondToolTip                    $PVPP[3]
+#define VPP_ToolOffsetX                      $PVPP[4]
+#define VPP_ToolOffsetY                      $PVPP[5]
+#define VPP_ToolOffsetZ                      $PVPP[6]
+#define VPP_ToolRotateX                      $PVPP[7]
+#define VPP_ToolRotateY                      $PVPP[8]
+#define VPP_ToolRotateZ                      $PVPP[9]
+#define VPP_Tip1OffsetX                      $PVPP[10]
+#define VPP_Tip1OffsetY                      $PVPP[11]
+#define VPP_Tip1OffsetZ                      $PVPP[12]
+#define VPP_Tip1RotateX                      $PVPP[13]
+#define VPP_Tip1RotateY                      $PVPP[14]
+#define VPP_Tip1RotateZ                      $PVPP[15]
+#define VPP_Tip2OffsetX                      $PVPP[16]
+#define VPP_Tip2OffsetY                      $PVPP[17]
+#define VPP_Tip2OffsetZ                      $PVPP[18]
+#define VPP_Tip2RotateX                      $PVPP[19]
+#define VPP_Tip2RotateY                      $PVPP[20]
+#define VPP_Tip2RotateZ                      $PVPP[21]
+#define VPP_Axis1Type                        $PVPP[22]
+#define VPP_Axis1OffsetX                     $PVPP[23]
+#define VPP_Axis1OffsetY                     $PVPP[24]
+#define VPP_Axis1OffsetZ                     $PVPP[25]
+#define VPP_Axis1RotateX                     $PVPP[26]
+#define VPP_Axis1RotateY                     $PVPP[27]
+#define VPP_Axis1RotateZ                     $PVPP[28]
+#define VPP_Axis1MotionDirection             $PVPP[29]
+#define VPP_Axis1MotionMin                   $PVPP[30]
+#define VPP_Axis1MotionMax                   $PVPP[31]
+#define VPP_Axis1PhysicalAxis                $PVPP[32]
+#define VPP_Axis2Type                        $PVPP[33]
+#define VPP_Axis2OffsetX                     $PVPP[34]
+#define VPP_Axis2OffsetY                     $PVPP[35]
+#define VPP_Axis2OffsetZ                     $PVPP[36]
+#define VPP_Axis2RotateX                     $PVPP[37]
+#define VPP_Axis2RotateY                     $PVPP[38]
+#define VPP_Axis2RotateZ                     $PVPP[39]
+#define VPP_Axis2MotionDirection             $PVPP[40]
+#define VPP_Axis2MotionMin                   $PVPP[41]
+#define VPP_Axis2MotionMax                   $PVPP[42]
+#define VPP_Axis2PhysicalAxis                $PVPP[43]
+#define VPP_Axis3Type                        $PVPP[44]
+#define VPP_Axis3OffsetX                     $PVPP[45]
+#define VPP_Axis3OffsetY                     $PVPP[46]
+#define VPP_Axis3OffsetZ                     $PVPP[47]
+#define VPP_Axis3RotateX                     $PVPP[48]
+#define VPP_Axis3RotateY                     $PVPP[49]
+#define VPP_Axis3RotateZ                     $PVPP[50]
+#define VPP_Axis3MotionDirection             $PVPP[51]
+#define VPP_Axis3MotionMin                   $PVPP[52]
+#define VPP_Axis3MotionMax                   $PVPP[53]
+#define VPP_Axis3PhysicalAxis                $PVPP[54]
+#define VPP_Axis4Type                        $PVPP[55]
+#define VPP_Axis4OffsetX                     $PVPP[56]
+#define VPP_Axis4OffsetY                     $PVPP[57]
+#define VPP_Axis4OffsetZ                     $PVPP[58]
+#define VPP_Axis4RotateX                     $PVPP[59]
+#define VPP_Axis4RotateY                     $PVPP[60]
+#define VPP_Axis4RotateZ                     $PVPP[61]
+#define VPP_Axis4MotionDirection             $PVPP[62]
+#define VPP_Axis4MotionMin                   $PVPP[63]
+#define VPP_Axis4MotionMax                   $PVPP[64]
+#define VPP_Axis4PhysicalAxis                $PVPP[65]
+#define VPP_Axis5Type                        $PVPP[66]
+#define VPP_Axis5OffsetX                     $PVPP[67]
+#define VPP_Axis5OffsetY                     $PVPP[68]
+#define VPP_Axis5OffsetZ                     $PVPP[69]
+#define VPP_Axis5RotateX                     $PVPP[70]
+#define VPP_Axis5RotateY                     $PVPP[71]
+#define VPP_Axis5RotateZ                     $PVPP[72]
+#define VPP_Axis5MotionDirection             $PVPP[73]
+#define VPP_Axis5MotionMin                   $PVPP[74]
+#define VPP_Axis5MotionMax                   $PVPP[75]
+#define VPP_Axis5PhysicalAxis                $PVPP[76]
+#define VPP_Axis6Type                        $PVPP[77]
+#define VPP_Axis6OffsetX                     $PVPP[78]
+#define VPP_Axis6OffsetY                     $PVPP[79]
+#define VPP_Axis6OffsetZ                     $PVPP[80]
+#define VPP_Axis6RotateX                     $PVPP[81]
+#define VPP_Axis6RotateY                     $PVPP[82]
+#define VPP_Axis6RotateZ                     $PVPP[83]
+#define VPP_Axis6MotionDirection             $PVPP[84]
+#define VPP_Axis6MotionMin                   $PVPP[85]
+#define VPP_Axis6MotionMax                   $PVPP[86]
+#define VPP_Axis6PhysicalAxis                $PVPP[87]
+
+
