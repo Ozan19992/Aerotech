@@ -17,6 +17,52 @@ DNS_TEST_PORT = 53
 # DNS endpoints for connectivity probing (Cloudflare, Google, Quad9).
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
+USER_GUIDE_TEXT = """Bildschirm 1 Anleitung / Setup:
+1. Connect the GPIO interface
+   Raspberry Pi leads out 40 GPIO pins, while the screen leads out 26 pins.
+   When connecting, pay attention to the corresponding pins and Raspberry Pi pins.
+
+2. Connect the HDMI connector to the HDMI port of the screen and the Pi.
+3. Turn the Backlight on the back of the LCD to "ON".
+   Note: Raspberry Pi Zero / Zero 2 W needs an additional HDMI cable for connection.
+
+Software Setting:
+1) Download the latest image and unzip to .img.
+2) Format TF card using SDFormatter.
+3) Write image using Win32DiskImager.
+4) In config.txt add:
+   hdmi_group=2
+   hdmi_mode=87
+   hdmi_cvt 800 480 60 6 0 0 0
+   # optional 480x320 lines:
+   #hdmi_pixel_freq_limit=20000000
+   #hdmi_cvt 480 320 60 6 0 0 0
+   #hdmi_drive=1
+   dtoverlay=waveshare-ads7846,penirq=25,xmin=200,xmax=3900,ymin=200,ymax=3900,speed=50000
+5) Copy waveshare-ads7846.dtbo to /boot/overlays/.
+6) Boot Raspberry Pi and wait >10 seconds.
+
+Touch calibration:
+- If left edge not touchable: reduce x_min (e.g. 200 -> 100)
+- If right edge not touchable: increase x_max (e.g. 3900 -> 4000)
+- If top edge not touchable: reduce y_min (e.g. 200 -> 100)
+- If bottom edge not touchable: increase y_max (e.g. 3900 -> 4000)
+
+Tools:
+sudo apt-get install evtest
+sudo evtest
+sudo nano /boot/firmware/config.txt
+dtoverlay=waveshare-ads7846,x_min=164,x_max=4010,y_min=154,y_max=3758
+sudo reboot
+
+Rotation (examples):
+- Bookworm: Screen Configuration -> HDMI-1 -> Orientation
+- wayfire.ini:
+  [output:HDMI-A-1]
+  mode = 480x320@60
+  transform = 270
+- Bullseye/Kali: xrandr -o 1 or display_rotate=3
+"""
 
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
@@ -153,7 +199,6 @@ class TestprogrammApp:
     def show_start_screen(self):
         self.clear_screen()
         self.elapsed = 0
-        self.add_wifi_icon()
 
         title_label = tk.Label(
             self.main_frame,
@@ -235,6 +280,7 @@ class TestprogrammApp:
             padx=30,
             pady=12,
         )
+        self.retry_button.bind("<ButtonRelease-1>", lambda e: self.start_internet_test())
 
         self.start_internet_test()
 
@@ -315,6 +361,7 @@ class TestprogrammApp:
             height=2,
             command=lambda: self.select_user("VFF"),
         )
+        vff_button.bind("<ButtonRelease-1>", lambda e: self.select_user("VFF"))
         vff_button.grid(row=0, column=0, padx=20)
 
         koo_button = tk.Button(
@@ -325,6 +372,7 @@ class TestprogrammApp:
             height=2,
             command=lambda: self.select_user("KOO"),
         )
+        koo_button.bind("<ButtonRelease-1>", lambda e: self.select_user("KOO"))
         koo_button.grid(row=0, column=1, padx=20)
 
         self.selected_user_label = tk.Label(
@@ -335,6 +383,27 @@ class TestprogrammApp:
             bg="white",
         )
         self.selected_user_label.pack(pady=20)
+
+        guide_frame = tk.Frame(self.main_frame, bg="white")
+        guide_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+        guide_scroll = tk.Scrollbar(guide_frame, orient="vertical")
+        guide_scroll.pack(side="right", fill="y")
+
+        guide_text = tk.Text(
+            guide_frame,
+            wrap="word",
+            font=("Arial", 13),
+            bg="white",
+            fg="black",
+            yscrollcommand=guide_scroll.set,
+        )
+        guide_text.pack(side="left", fill="both", expand=True)
+        guide_scroll.config(command=guide_text.yview)
+        guide_text.insert("1.0", USER_GUIDE_TEXT)
+        guide_text.bind("<ButtonPress-1>", lambda e: guide_text.scan_mark(e.x, e.y))
+        guide_text.bind("<B1-Motion>", lambda e: guide_text.scan_dragto(e.x, e.y, gain=1))
+        guide_text.config(state="disabled")
 
     def update_datetime(self):
         if self.root.winfo_exists() and self.datetime_label and self.datetime_label.winfo_exists():
