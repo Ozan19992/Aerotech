@@ -138,11 +138,11 @@ class TestprogrammApp:
 
     def update_connection_ui(self, connected: bool):
         if connected:
-            self.status_label.config(text="Internet Connect")
+            self.status_label.config(text="Internet Connected")
             self.result_label.config(text="PASS", fg="green")
             self.draw_wifi_icon("green")
         else:
-            self.status_label.config(text="Keine Internet Verbindung")
+            self.status_label.config(text="No Internet Connection")
             self.result_label.config(text="FAIL", fg="red")
             self.draw_wifi_icon("red")
 
