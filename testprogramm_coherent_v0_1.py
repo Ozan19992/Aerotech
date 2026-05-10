@@ -478,7 +478,7 @@ class TestprogrammApp:
         self.question_result_label = tk.Label(
             self.main_frame,
             text="",
-            font=("Arial", 10, "bold"),
+            font=("Arial", 12, "bold"),
             fg="red",
             bg="white",
         )
