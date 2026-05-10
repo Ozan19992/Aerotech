@@ -44,7 +44,7 @@ This LCD can support Raspberry Pi OS / Ubuntu / Kali / Retropie systems.
 hdmi_group=2
 hdmi_mode=87
 #Display with 800*480 resolution
-# keep enabled:
+# active config line (do not prefix with #):
 hdmi_cvt 800 480 60 6 0 0 0
 #Use 480*320 resolution display, you need to add the following 3 lines of code
 #hdmi_pixel_freq_limit=20000000
