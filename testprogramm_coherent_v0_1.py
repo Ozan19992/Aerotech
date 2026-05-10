@@ -400,7 +400,9 @@ class TestprogrammApp:
         guide_text.insert("1.0", USER_GUIDE_TEXT)
         guide_text.bind("<ButtonPress-1>", lambda e: guide_text.scan_mark(e.x, e.y))
         guide_text.bind("<B1-Motion>", lambda e: guide_text.scan_dragto(e.x, e.y, gain=1))
-        guide_text.config(state="disabled")
+        guide_text.bind("<Key>", lambda e: "break")
+        guide_text.bind("<<Paste>>", lambda e: "break")
+        guide_text.bind("<<Cut>>", lambda e: "break")
 
     def update_datetime(self):
         if self.root.winfo_exists() and self.datetime_label and self.datetime_label.winfo_exists():
