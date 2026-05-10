@@ -17,7 +17,7 @@ DNS_TEST_PORT = 53
 # DNS endpoints for connectivity probing (Cloudflare, Google, Quad9).
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
-USER_GUIDE_TEXT = """Touch Aktivierung – Anleitung
+USER_GUIDE_TEXT = """Touch Activation - Instructions
 
 1. Connect the GPIO interface
 Raspberry Pi leads out 40 GPIO pins, while the screen leads out 26 pins.
@@ -39,10 +39,12 @@ This LCD can support Raspberry Pi OS / Ubuntu / Kali / Retropie systems.
 2) Connect the TF card to the PC, and use SDFormatter software to format the TF card.
 3) Open the Win32DiskImager software, select the system image downloaded in step 1, and click 'Write'.
 4) After image write, open config.txt in TF root and add:
+   (Path can be /boot/config.txt or /boot/firmware/config.txt depending on OS)
 
 hdmi_group=2
 hdmi_mode=87
 #Display with 800*480 resolution
+# keep enabled:
 hdmi_cvt 800 480 60 6 0 0 0
 #Use 480*320 resolution display, you need to add the following 3 lines of code
 #hdmi_pixel_freq_limit=20000000
@@ -82,7 +84,7 @@ Bookworm:
 2. Screen -> HDMI-1 -> Orientation -> Apply
 After rotation, switch xmin/xmax/ymin/ymax accordingly.
 
-Lite way (wayfire):
+Raspberry Pi OS Lite (Wayfire):
 sudo nano .config/wayfire.ini
 Add:
 [output:HDMI-A-1]
