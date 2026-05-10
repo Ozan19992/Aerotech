@@ -392,7 +392,7 @@ class TestprogrammApp:
         self.datetime_label = tk.Label(
             header,
             text="",
-            font=("Arial", 11, "bold"),
+            font=("Arial", 16, "bold"),
             fg="black",
             bg="white",
             anchor="w",
@@ -404,7 +404,7 @@ class TestprogrammApp:
         tk.Label(
             header,
             text=f"User: {selected_user_text}",
-            font=("Arial", 11, "bold"),
+            font=("Arial", 16, "bold"),
             fg="black",
             bg="white",
             anchor="center",
