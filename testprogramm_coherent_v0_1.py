@@ -19,12 +19,12 @@ DNS_TEST_PORT = 53
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
 QUESTION_TEXTS = [
-    "Frage 1: Hat der Gehäuse Kratzer und mechanische Schäden am Gehäuse?",
+    "Frage 1: Hat das Gehäuse Kratzer und mechanische Schäden am Gehäuse?",
     "Frage 2: Ist alles mechanisch angezogen/fest?",
     "Frage 3: Sind alle Stecker/Schalter und Geräte mit Label versehen?",
     "Frage 4: Leuchtet die Netzteil LED grün?",
     "Frage 5: Gefahren Label auf dem Gehäuse vorhanden?",
-    "Frage 6: Defekte an der Isolation oder Krimpungen zu erkennen?",
+    "Frage 6: Sind Defekte an der Isolation oder Krimpungen zu erkennen?",
 ]
 REPORT_FILENAME_PREFIX = "PSV_Test"
 WIFI_ICON_X_OFFSET = -15
@@ -514,7 +514,7 @@ class TestprogrammApp:
 
     def _generate_report(self, end_time: datetime) -> str:
         """Write a TXT report to the desktop and return the overall result string."""
-        overall = "PASS" if all(a == "PASS" for a in self.question_answers) else "FAIL"
+        overall = "PASS" if self.question_answers and all(a == "PASS" for a in self.question_answers) else "FAIL"
 
         desktop = Path.home() / "Desktop"
         desktop.mkdir(parents=True, exist_ok=True)
