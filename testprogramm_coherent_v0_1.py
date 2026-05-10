@@ -17,51 +17,93 @@ DNS_TEST_PORT = 53
 # DNS endpoints for connectivity probing (Cloudflare, Google, Quad9).
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
-USER_GUIDE_TEXT = """Bildschirm 1 Anleitung / Setup:
+USER_GUIDE_TEXT = """Touch Aktivierung – Anleitung
+
 1. Connect the GPIO interface
-   Raspberry Pi leads out 40 GPIO pins, while the screen leads out 26 pins.
-   When connecting, pay attention to the corresponding pins and Raspberry Pi pins.
+Raspberry Pi leads out 40 GPIO pins, while the screen leads out 26 pins.
+When connecting, pay attention to the corresponding pins and Raspberry Pi pins.
 
 2. Connect the HDMI connector to the HDMI port of the screen and the Pi.
+
 3. Turn the Backlight on the back of the LCD to "ON".
-   Note: Raspberry Pi Zero / Zero 2 W needs an additional HDMI cable for connection.
+Note: Raspberry Pi Zero / Zero 2 W needs an additional HDMI cable for connection.
 
-Software Setting:
-1) Download the latest image and unzip to .img.
-2) Format TF card using SDFormatter.
-3) Write image using Win32DiskImager.
-4) In config.txt add:
-   hdmi_group=2
-   hdmi_mode=87
-   hdmi_cvt 800 480 60 6 0 0 0
-   # optional 480x320 lines:
-   #hdmi_pixel_freq_limit=20000000
-   #hdmi_cvt 480 320 60 6 0 0 0
-   #hdmi_drive=1
-   dtoverlay=waveshare-ads7846,penirq=25,xmin=200,xmax=3900,ymin=200,ymax=3900,speed=50000
-5) Copy waveshare-ads7846.dtbo to /boot/overlays/.
-6) Boot Raspberry Pi and wait >10 seconds.
+The hardware connection is as shown below (Pi 4 and Pi 3B+):
+- 3.5inch-HDMI-LCD-Manual-PI4B.jpg
+- 3.5inch-HDMILCD-Manual-PI3B+.jpg
 
-Touch calibration:
-- If left edge not touchable: reduce x_min (e.g. 200 -> 100)
-- If right edge not touchable: increase x_max (e.g. 3900 -> 4000)
-- If top edge not touchable: reduce y_min (e.g. 200 -> 100)
-- If bottom edge not touchable: increase y_max (e.g. 3900 -> 4000)
+Software Setting
+This LCD can support Raspberry Pi OS / Ubuntu / Kali / Retropie systems.
 
-Tools:
+1) Download the compressed file to the PC, and unzip it to get the .img file.
+2) Connect the TF card to the PC, and use SDFormatter software to format the TF card.
+3) Open the Win32DiskImager software, select the system image downloaded in step 1, and click 'Write'.
+4) After image write, open config.txt in TF root and add:
+
+hdmi_group=2
+hdmi_mode=87
+#Display with 800*480 resolution
+hdmi_cvt 800 480 60 6 0 0 0
+#Use 480*320 resolution display, you need to add the following 3 lines of code
+#hdmi_pixel_freq_limit=20000000
+#hdmi_cvt 480 320 60 6 0 0 0
+#hdmi_drive=1
+dtoverlay=waveshare-ads7846,penirq=25,xmin=200,xmax=3900,ymin=200,ymax=3900,speed=50000
+
+5) Download waveshare-ads7846.dtbo and copy dtbo files to /boot/overlays/.
+6) Insert TF card, power on Raspberry Pi, and wait more than 10 seconds.
+
+Touch calibration
+If left edge cannot be touched: adjust x_min down (e.g. 200 -> 100).
+If right edge cannot be touched: adjust x_max up (e.g. 3900 -> 4000).
+If top edge cannot be touched: adjust y_min down (e.g. 200 -> 100).
+If bottom edge cannot be touched: adjust y_max up (e.g. 3900 -> 4000).
+
+Use evtest for values:
 sudo apt-get install evtest
 sudo evtest
+
+Calibration images:
+- Calibration 1.png
+- Calibration 2.png (x_min)
+- Calibration 3.png (x_max)
+- Calibration 4.png (y_min)
+- Calibration 5.png (y_max)
+
 sudo nano /boot/firmware/config.txt
+Add:
 dtoverlay=waveshare-ads7846,x_min=164,x_max=4010,y_min=154,y_max=3758
+Then:
 sudo reboot
 
-Rotation (examples):
-- Bookworm: Screen Configuration -> HDMI-1 -> Orientation
-- wayfire.ini:
-  [output:HDMI-A-1]
-  mode = 480x320@60
-  transform = 270
-- Bullseye/Kali: xrandr -o 1 or display_rotate=3
+Rotation
+Bookworm:
+1. Open "Screen Configuration"
+2. Screen -> HDMI-1 -> Orientation -> Apply
+After rotation, switch xmin/xmax/ymin/ymax accordingly.
+
+Lite way (wayfire):
+sudo nano .config/wayfire.ini
+Add:
+[output:HDMI-A-1]
+mode = 480x320@60
+transform = 270
+
+Bullseye/Kali:
+Check /boot/config.txt for:
+dtoverlay=vc4-kms-v3d or dtoverlay=vc4-fkms-v3d
+
+If enabled:
+sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
+xrandr -o 1
+
+If not enabled:
+sudo nano /boot/config.txt
+display_rotate=3
+
+Ubuntu:
+Check /boot/firmware/config.txt for vc4-kms/fkms line.
+Then rotate in "Displays" app.
 """
 
 WIFI_ICON_X_OFFSET = -15
