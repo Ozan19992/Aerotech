@@ -2,6 +2,7 @@ import socket
 import threading
 import tkinter as tk
 from datetime import datetime
+from pathlib import Path
 from tkinter import ttk
 
 APP_NAME = "Testprogramm Coherent V0.1"
@@ -18,9 +19,14 @@ DNS_TEST_PORT = 53
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
 QUESTION_TEXTS = [
-    "Frage 1: Sind auf dem Gehäuse Kratzer oder andere Arten von mechanischen Schäden zu erkennen?",
-    "Frage 2: Ist die nächste Sichtprüfung ohne Auffälligkeiten?",
+    "Frage 1: Hat der Gehäuse Kratzer und mechanische Schäden am Gehäuse?",
+    "Frage 2: Ist alles mechanisch angezogen/fest?",
+    "Frage 3: Sind alle Stecker/Schalter und Geräte mit Label versehen?",
+    "Frage 4: Leuchtet die Netzteil LED grün?",
+    "Frage 5: Gefahren Label auf dem Gehäuse vorhanden?",
+    "Frage 6: Defekte an der Isolation oder Krimpungen zu erkennen?",
 ]
+REPORT_FILENAME_PREFIX = "PSV_Test"
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (64, 48)
@@ -64,6 +70,8 @@ class TestprogrammApp:
         self.internet_test_running = False
         self.monitor_lock = threading.Lock()
         self.internet_test_lock = threading.Lock()
+        self.test_start_time: datetime | None = None
+        self.question_answers: list[str] = []
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -377,6 +385,8 @@ class TestprogrammApp:
         if self.confirm_user_button:
             self.confirm_user_button.config(state="disabled")
         if self.selected_user:
+            self.test_start_time = datetime.now()
+            self.question_answers = []
             self.show_question_screen(0)
 
     def show_question_screen(self, question_index: int):
@@ -429,6 +439,9 @@ class TestprogrammApp:
         ).pack(pady=(4, 4))
 
         if question_index >= len(QUESTION_TEXTS):
+            test_end_time = datetime.now()
+            overall = self._generate_report(test_end_time)
+            result_color = "green" if overall == "PASS" else "red"
             tk.Label(
                 self.main_frame,
                 text="Alle Fragen erfolgreich abgeschlossen.",
@@ -437,7 +450,14 @@ class TestprogrammApp:
                 bg="white",
                 wraplength=QUESTION_WRAPLENGTH,
                 justify="center",
-            ).pack(pady=20)
+            ).pack(pady=(20, 4))
+            tk.Label(
+                self.main_frame,
+                text=f"Gesamtergebnis: {overall}",
+                font=("Arial", 30, "bold"),
+                fg=result_color,
+                bg="white",
+            ).pack(pady=(4, 20))
             return
 
         tk.Label(
@@ -485,10 +505,53 @@ class TestprogrammApp:
         self.question_result_label.pack(pady=4)
 
     def on_question_pass(self, current_index: int):
+        self.question_answers.append("PASS")
         self.show_question_screen(current_index + 1)
 
     def on_question_fail(self, current_index: int):
+        self.question_answers.append("FAIL")
         self.show_question_screen(current_index + 1)
+
+    def _generate_report(self, end_time: datetime) -> str:
+        """Write a TXT report to the desktop and return the overall result string."""
+        overall = "PASS" if all(a == "PASS" for a in self.question_answers) else "FAIL"
+
+        desktop = Path.home() / "Desktop"
+        desktop.mkdir(parents=True, exist_ok=True)
+
+        start_str = (
+            self.test_start_time.strftime("%Y%m%d_%H%M%S")
+            if self.test_start_time
+            else "unbekannt"
+        )
+        filename = f"{REPORT_FILENAME_PREFIX}_{start_str}_{overall}.txt"
+        filepath = desktop / filename
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("PSV Testprotokoll\n")
+            f.write("=" * 45 + "\n")
+            f.write(f"Tester:        {self.selected_user or 'Unbekannt'}\n")
+            f.write(
+                f"Testbeginn:    "
+                + (
+                    self.test_start_time.strftime("%d.%m.%Y %H:%M:%S")
+                    if self.test_start_time
+                    else "unbekannt"
+                )
+                + "\n"
+            )
+            f.write(f"Testende:      {end_time.strftime('%d.%m.%Y %H:%M:%S')}\n")
+            f.write("=" * 45 + "\n\n")
+            f.write("Prüffragen:\n\n")
+            for i, (question, answer) in enumerate(
+                zip(QUESTION_TEXTS, self.question_answers), 1
+            ):
+                f.write(f"  {question}\n")
+                f.write(f"  Ergebnis: {answer}\n\n")
+            f.write("=" * 45 + "\n")
+            f.write(f"Gesamtergebnis: {overall}\n")
+
+        return overall
 
     def on_close(self):
         if self.monitor_after_id is not None:
