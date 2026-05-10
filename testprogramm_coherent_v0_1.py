@@ -18,7 +18,7 @@ DNS_TEST_PORT = 53
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
 QUESTION_TEXTS = [
-    "Frage 1: Sind auf dem Gehäuse Kratzer oder andere Arten mechanischer Schäden zu erkennen?",
+    "Frage 1: Sind auf dem Gehäuse Kratzer oder andere Arten mechanische Schäden zu erkennen?",
     "Frage 2: Ist die nächste Sichtprüfung ohne Auffälligkeiten?",
 ]
 WIFI_ICON_X_OFFSET = -15
@@ -454,7 +454,7 @@ class TestprogrammApp:
             height=2,
             bg="#ffd9d9",
             activebackground="#ffc0c0",
-            command=self.on_question_fail,
+            command=lambda: self.on_question_fail(question_index),
         )
         fail_button.grid(row=0, column=1, padx=20)
 
@@ -470,9 +470,9 @@ class TestprogrammApp:
     def on_question_pass(self, current_index: int):
         self.show_question_screen(current_index + 1)
 
-    def on_question_fail(self):
+    def on_question_fail(self, current_index: int):
         if self.question_result_label:
-            self.question_result_label.config(text="FAIL bestätigt. Bitte Gehäuse prüfen.")
+            self.question_result_label.config(text=f"FAIL bei Frage {current_index + 1}. Bitte prüfen.")
 
     def on_close(self):
         if self.monitor_after_id is not None:
