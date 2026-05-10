@@ -126,7 +126,6 @@ class TestprogrammApp:
             try:
                 # Successful connect is the connectivity test; socket is auto-closed by context manager.
                 with socket.create_connection((host, DNS_TEST_PORT), timeout=CONNECT_TIMEOUT_SEC):
-                    pass
                     return True
             except OSError:
                 continue
