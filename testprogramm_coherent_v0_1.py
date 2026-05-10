@@ -14,6 +14,8 @@ WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (80, 60)
 WIFI_ARCS = [(10, 10, 70, 70), (20, 20, 60, 60), (30, 30, 50, 50)]
 WIFI_DOT = (36, 46, 44, 54)
+DNS_TEST_PORT = 53
+DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 
 
 class TestprogrammApp:
@@ -45,7 +47,7 @@ class TestprogrammApp:
         title_label = tk.Label(
             self.main_frame,
             text=TITLE_TEXT,
-            font=("Arial", 42, "underline", "bold"),
+            font=("Arial", 42, "bold underline"),
             fg="blue",
             bg="white",
         )
@@ -103,7 +105,7 @@ class TestprogrammApp:
 
         self.status_label = tk.Label(
             self.main_frame,
-            text="Prüfe Internetverbindung...",
+            text="Checking internet connection...",
             font=("Arial", 24),
             fg="black",
             bg="white",
@@ -123,13 +125,8 @@ class TestprogrammApp:
     def check_internet_connection(self):
         connected = False
 
-        test_targets = [
-            ("1.1.1.1", 53),
-            ("8.8.8.8", 53),
-            ("9.9.9.9", 53),
-        ]
-
-        for host, port in test_targets:
+        for host in DNS_TEST_SERVERS:
+            port = DNS_TEST_PORT
             try:
                 with socket.create_connection((host, port), timeout=2):
                     connected = True
