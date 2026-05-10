@@ -17,8 +17,6 @@ DNS_TEST_PORT = 53
 # DNS endpoints for connectivity probing (Cloudflare, Google, Quad9).
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
-USER_GUIDE_TEXT = ""
-
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (64, 48)
@@ -367,6 +365,8 @@ class TestprogrammApp:
     def confirm_selected_user(self):
         if self.selected_user and self.selected_user_label:
             self.selected_user_label.config(text=f"User bestätigt: {self.selected_user}", fg="green")
+        if self.confirm_user_button:
+            self.confirm_user_button.config(state="disabled")
 
     def on_close(self):
         if self.monitor_after_id is not None:
