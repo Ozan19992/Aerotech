@@ -18,7 +18,7 @@ DNS_TEST_PORT = 53
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
 QUESTION_TEXTS = [
-    "Frage 1: Sind auf dem Gehäuse Kratzer oder andere Arten mechanische Schäden zu erkennen?",
+    "Frage 1: Sind auf dem Gehäuse Kratzer oder andere Arten von mechanischen Schäden zu erkennen?",
     "Frage 2: Ist die nächste Sichtprüfung ohne Auffälligkeiten?",
 ]
 WIFI_ICON_X_OFFSET = -15
@@ -26,6 +26,7 @@ WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (64, 48)
 WIFI_ARCS = [(8, 8, 56, 56), (16, 16, 48, 48), (24, 24, 40, 40)]
 WIFI_DOT = (29, 35, 35, 41)
+USER_BADGE_SPACING = 28
 
 
 class TestprogrammApp:
@@ -125,6 +126,7 @@ class TestprogrammApp:
             try:
                 # Successful connect is the connectivity test; socket is auto-closed by context manager.
                 with socket.create_connection((host, DNS_TEST_PORT), timeout=CONNECT_TIMEOUT_SEC):
+                    pass
                     return True
             except OSError:
                 continue
@@ -398,7 +400,7 @@ class TestprogrammApp:
             fg="black",
             bg="white",
         )
-        user_badge.place(relx=1.0, x=-(WIFI_ICON_SIZE[0] + 28), y=20, anchor="ne")
+        user_badge.place(relx=1.0, x=-(WIFI_ICON_SIZE[0] + USER_BADGE_SPACING), y=20, anchor="ne")
 
         heading = tk.Label(
             self.main_frame,
