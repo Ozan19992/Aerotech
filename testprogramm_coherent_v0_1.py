@@ -8,7 +8,7 @@ APP_NAME = "Testprogramm Coherent V0.1"
 TITLE_TEXT = "Coherent Belp"
 VERSION_TEXT = "Softwareversion: V0.1"
 INTERNET_TITLE = "Internet Connection Test:"
-USER_TITLE = "User auswählen"
+USER_TITLE = "Benutzer auswählen"
 DURATION_MS = 5000
 UPDATE_MS = 50
 MONITOR_INTERVAL_MS = 5000
@@ -125,17 +125,11 @@ class TestprogrammApp:
         if not self.root.winfo_exists():
             return
 
-        if self.monitor_after_id is not None:
-            try:
-                self.root.after_cancel(self.monitor_after_id)
-            except tk.TclError:
-                pass
-            self.monitor_after_id = None
+        if self.connection_check_running:
+            return
 
-        if not self.connection_check_running:
-            self.connection_check_running = True
-            threading.Thread(target=self._connection_check_worker, daemon=True).start()
-        self.monitor_after_id = self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
+        self.connection_check_running = True
+        threading.Thread(target=self._connection_check_worker, daemon=True).start()
 
     def _connection_check_worker(self):
         connected = self.has_internet_connection()
@@ -144,6 +138,8 @@ class TestprogrammApp:
     def _apply_connection_check_result(self, connected: bool):
         self.connection_check_running = False
         self.set_connection_state(connected)
+        if self.root.winfo_exists():
+            self.monitor_after_id = self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
 
     def set_connection_state(self, connected: bool):
         self.connected = connected
