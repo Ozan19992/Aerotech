@@ -126,7 +126,7 @@ class TestprogrammApp:
         test_targets = [
             ("1.1.1.1", 53),
             ("8.8.8.8", 53),
-            ("github.com", 443),
+            ("9.9.9.9", 53),
         ]
 
         for host, port in test_targets:
