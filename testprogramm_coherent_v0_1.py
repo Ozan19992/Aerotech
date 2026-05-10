@@ -280,7 +280,6 @@ class TestprogrammApp:
             padx=30,
             pady=12,
         )
-        self.retry_button.bind("<ButtonRelease-1>", lambda e: self.start_internet_test())
 
         self.start_internet_test()
 
@@ -361,7 +360,6 @@ class TestprogrammApp:
             height=2,
             command=lambda: self.select_user("VFF"),
         )
-        vff_button.bind("<ButtonRelease-1>", lambda e: self.select_user("VFF"))
         vff_button.grid(row=0, column=0, padx=20)
 
         koo_button = tk.Button(
@@ -372,7 +370,6 @@ class TestprogrammApp:
             height=2,
             command=lambda: self.select_user("KOO"),
         )
-        koo_button.bind("<ButtonRelease-1>", lambda e: self.select_user("KOO"))
         koo_button.grid(row=0, column=1, padx=20)
 
         self.selected_user_label = tk.Label(
