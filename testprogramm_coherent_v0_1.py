@@ -8,10 +8,11 @@ APP_NAME = "Testprogramm Coherent V0.1"
 TITLE_TEXT = "Coherent Belp"
 VERSION_TEXT = "Softwareversion: V0.1"
 INTERNET_TITLE = "Internet Connection Test:"
-USER_TITLE = "User Auswählen"
+USER_TITLE = "User auswählen"
 DURATION_MS = 5000
 UPDATE_MS = 50
 MONITOR_INTERVAL_MS = 5000
+PASS_TO_USER_DELAY_MS = 700
 DNS_TEST_PORT = 53
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 
@@ -43,11 +44,20 @@ class TestprogrammApp:
         self.wifi_canvas = None
         self.datetime_label = None
         self.selected_user_label = None
+        self.datetime_after_id = None
+        self.connection_check_running = False
 
         self.show_start_screen()
         self.start_connection_monitor()
 
     def clear_screen(self):
+        if self.datetime_after_id is not None:
+            try:
+                self.root.after_cancel(self.datetime_after_id)
+            except tk.TclError:
+                pass
+            self.datetime_after_id = None
+
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
@@ -92,12 +102,18 @@ class TestprogrammApp:
         self.schedule_connection_check()
 
     def schedule_connection_check(self):
-        threading.Thread(target=self._connection_check_worker, daemon=True).start()
+        if not self.connection_check_running:
+            self.connection_check_running = True
+            threading.Thread(target=self._connection_check_worker, daemon=True).start()
         self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
 
     def _connection_check_worker(self):
         connected = self.has_internet_connection()
-        self.root.after(0, lambda: self.set_connection_state(connected))
+        self.root.after(0, lambda: self._apply_connection_check_result(connected))
+
+    def _apply_connection_check_result(self, connected: bool):
+        self.connection_check_running = False
+        self.set_connection_state(connected)
 
     def set_connection_state(self, connected: bool):
         self.connected = connected
@@ -212,7 +228,7 @@ class TestprogrammApp:
                 self.status_label.config(text="")
             if self.result_label:
                 self.result_label.config(text="PASS", fg="green")
-            self.root.after(700, self.show_user_selection_screen)
+            self.root.after(PASS_TO_USER_DELAY_MS, self.show_user_selection_screen)
         else:
             if self.status_label:
                 self.status_label.config(text="No Internet Connection", fg="black")
@@ -280,7 +296,7 @@ class TestprogrammApp:
         if self.datetime_label and self.datetime_label.winfo_exists():
             now_text = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
             self.datetime_label.config(text=now_text)
-            self.root.after(1000, self.update_datetime)
+            self.datetime_after_id = self.root.after(1000, self.update_datetime)
 
     def select_user(self, user: str):
         if self.selected_user_label:
