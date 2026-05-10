@@ -379,101 +379,114 @@ class TestprogrammApp:
 
     def show_question_screen(self, question_index: int):
         self.clear_screen()
-        self.add_wifi_icon()
+
+        # Header: Datum links | User mittig | WLAN rechts
+        header = tk.Frame(self.main_frame, bg="white")
+        header.pack(fill="x", padx=4, pady=2)
+        header.columnconfigure(0, weight=1)
+        header.columnconfigure(1, weight=1)
+        header.columnconfigure(2, weight=0)
 
         self.datetime_label = tk.Label(
-            self.main_frame,
+            header,
             text="",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 9, "bold"),
             fg="black",
             bg="white",
+            anchor="w",
         )
-        self.datetime_label.place(relx=1.0, x=-20, y=20, anchor="ne")
+        self.datetime_label.grid(row=0, column=0, sticky="w")
         self.update_datetime()
 
-        selected_user_text = self.selected_user if self.selected_user else "-"
-        user_badge = tk.Label(
-            self.main_frame,
+        selected_user_text = self.selected_user if self.selected_user else "Unbekannt"
+        tk.Label(
+            header,
             text=f"User: {selected_user_text}",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 9, "bold"),
             fg="black",
             bg="white",
-        )
-        user_badge.place(relx=1.0, x=-(WIFI_ICON_SIZE[0] + USER_BADGE_SPACING), y=20, anchor="ne")
+            anchor="center",
+        ).grid(row=0, column=1)
 
-        heading = tk.Label(
+        self.wifi_canvas = tk.Canvas(
+            header,
+            width=WIFI_ICON_SIZE[0],
+            height=WIFI_ICON_SIZE[1],
+            bg="white",
+            highlightthickness=0,
+        )
+        self.wifi_canvas.grid(row=0, column=2, sticky="e")
+        self.draw_wifi_icon("green" if self.connected else "red")
+
+        tk.Label(
             self.main_frame,
             text="Prüffragen",
-            font=("Arial", 32, "bold"),
+            font=("Arial", 13, "bold"),
             fg="black",
             bg="white",
-        )
-        heading.pack(pady=(120, 30))
+        ).pack(pady=(4, 4))
 
         if question_index >= len(QUESTION_TEXTS):
-            done_label = tk.Label(
+            tk.Label(
                 self.main_frame,
                 text="Alle Fragen erfolgreich abgeschlossen.",
-                font=("Arial", 24, "bold"),
+                font=("Arial", 11, "bold"),
                 fg="green",
                 bg="white",
-            )
-            done_label.pack(pady=40)
+                wraplength=450,
+                justify="center",
+            ).pack(pady=20)
             return
 
-        question_label = tk.Label(
+        tk.Label(
             self.main_frame,
             text=QUESTION_TEXTS[question_index],
-            font=("Arial", 24, "bold"),
+            font=("Arial", 11, "bold"),
             fg="black",
             bg="white",
-            wraplength=1200,
+            wraplength=450,
             justify="center",
-        )
-        question_label.pack(padx=60, pady=20)
+        ).pack(padx=8, pady=8)
 
         button_frame = tk.Frame(self.main_frame, bg="white")
-        button_frame.pack(pady=30)
+        button_frame.pack(pady=10)
 
-        pass_button = tk.Button(
+        tk.Button(
             button_frame,
             text="PASS",
-            font=("Arial", 22, "bold"),
-            width=10,
-            height=2,
+            font=("Arial", 12, "bold"),
+            width=7,
+            height=1,
             bg="#d9f7d9",
             activebackground="#bdeebd",
             command=lambda: self.on_question_pass(question_index),
-        )
-        pass_button.grid(row=0, column=0, padx=20)
+        ).grid(row=0, column=0, padx=10)
 
-        fail_button = tk.Button(
+        tk.Button(
             button_frame,
             text="FAIL",
-            font=("Arial", 22, "bold"),
-            width=10,
-            height=2,
+            font=("Arial", 12, "bold"),
+            width=7,
+            height=1,
             bg="#ffd9d9",
             activebackground="#ffc0c0",
             command=lambda: self.on_question_fail(question_index),
-        )
-        fail_button.grid(row=0, column=1, padx=20)
+        ).grid(row=0, column=1, padx=10)
 
         self.question_result_label = tk.Label(
             self.main_frame,
             text="",
-            font=("Arial", 20, "bold"),
+            font=("Arial", 10, "bold"),
             fg="red",
             bg="white",
         )
-        self.question_result_label.pack(pady=10)
+        self.question_result_label.pack(pady=4)
 
     def on_question_pass(self, current_index: int):
         self.show_question_screen(current_index + 1)
 
     def on_question_fail(self, current_index: int):
-        if self.question_result_label:
-            self.question_result_label.config(text=f"FAIL bei Frage {current_index + 1}. Bitte prüfen.")
+        self.show_question_screen(current_index + 1)
 
     def on_close(self):
         if self.monitor_after_id is not None:
