@@ -443,7 +443,7 @@ class TestprogrammApp:
         tk.Label(
             self.main_frame,
             text=QUESTION_TEXTS[question_index],
-            font=("Arial", 15, "bold"),
+            font=("Arial", 20, "bold"),
             fg="black",
             bg="white",
             wraplength=QUESTION_WRAPLENGTH,
