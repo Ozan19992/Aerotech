@@ -15,6 +15,7 @@ MONITOR_INTERVAL_MS = 5000
 PASS_TO_USER_DELAY_MS = 700
 DNS_TEST_PORT = 53
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
+CONNECT_TIMEOUT_SEC = 1.0
 
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
@@ -45,6 +46,7 @@ class TestprogrammApp:
         self.wifi_canvas = None
         self.datetime_label = None
         self.selected_user_label = None
+        self.animate_after_id = None
         self.datetime_after_id = None
         self.monitor_after_id = None
         self.pass_transition_after_id = None
@@ -55,6 +57,13 @@ class TestprogrammApp:
         self.start_connection_monitor()
 
     def clear_screen(self):
+        if self.animate_after_id is not None:
+            try:
+                self.root.after_cancel(self.animate_after_id)
+            except tk.TclError:
+                pass
+            self.animate_after_id = None
+
         if self.datetime_after_id is not None:
             try:
                 self.root.after_cancel(self.datetime_after_id)
@@ -103,7 +112,7 @@ class TestprogrammApp:
     def has_internet_connection(self) -> bool:
         for host in DNS_TEST_SERVERS:
             try:
-                with socket.create_connection((host, DNS_TEST_PORT), timeout=2):
+                with socket.create_connection((host, DNS_TEST_PORT), timeout=CONNECT_TIMEOUT_SEC):
                     return True
             except OSError:
                 continue
@@ -115,6 +124,14 @@ class TestprogrammApp:
     def schedule_connection_check(self):
         if not self.root.winfo_exists():
             return
+
+        if self.monitor_after_id is not None:
+            try:
+                self.root.after_cancel(self.monitor_after_id)
+            except tk.TclError:
+                pass
+            self.monitor_after_id = None
+
         if not self.connection_check_running:
             self.connection_check_running = True
             threading.Thread(target=self._connection_check_worker, daemon=True).start()
@@ -172,8 +189,9 @@ class TestprogrammApp:
             self.progress["value"] = self.elapsed
 
         if self.elapsed < DURATION_MS:
-            self.root.after(UPDATE_MS, self.animate_progress)
+            self.animate_after_id = self.root.after(UPDATE_MS, self.animate_progress)
         else:
+            self.animate_after_id = None
             self.show_internet_screen()
 
     def show_internet_screen(self):
