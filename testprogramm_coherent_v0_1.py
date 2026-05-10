@@ -137,7 +137,7 @@ class TestprogrammApp:
 
     def _connection_check_worker(self):
         connected = self.has_internet_connection()
-        self.root.after(0, lambda: self._apply_connection_check_result(connected))
+        self.root.after(0, self._apply_connection_check_result, connected)
 
     def _apply_connection_check_result(self, connected: bool):
         with self.monitor_lock:
@@ -255,7 +255,7 @@ class TestprogrammApp:
 
     def _internet_test_worker(self):
         connected = self.has_internet_connection()
-        self.root.after(0, lambda: self._finish_internet_test(connected))
+        self.root.after(0, self._finish_internet_test, connected)
 
     def _finish_internet_test(self, connected: bool):
         with self.internet_test_lock:
