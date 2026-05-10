@@ -392,7 +392,7 @@ class TestprogrammApp:
         self.datetime_label = tk.Label(
             header,
             text="",
-            font=("Arial", 9, "bold"),
+            font=("Arial", 11, "bold"),
             fg="black",
             bg="white",
             anchor="w",
@@ -404,7 +404,7 @@ class TestprogrammApp:
         tk.Label(
             header,
             text=f"User: {selected_user_text}",
-            font=("Arial", 9, "bold"),
+            font=("Arial", 11, "bold"),
             fg="black",
             bg="white",
             anchor="center",
@@ -423,7 +423,7 @@ class TestprogrammApp:
         tk.Label(
             self.main_frame,
             text="Prüffragen",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 18, "bold"),
             fg="black",
             bg="white",
         ).pack(pady=(4, 4))
@@ -432,7 +432,7 @@ class TestprogrammApp:
             tk.Label(
                 self.main_frame,
                 text="Alle Fragen erfolgreich abgeschlossen.",
-                font=("Arial", 11, "bold"),
+                font=("Arial", 14, "bold"),
                 fg="green",
                 bg="white",
                 wraplength=QUESTION_WRAPLENGTH,
@@ -443,7 +443,7 @@ class TestprogrammApp:
         tk.Label(
             self.main_frame,
             text=QUESTION_TEXTS[question_index],
-            font=("Arial", 11, "bold"),
+            font=("Arial", 15, "bold"),
             fg="black",
             bg="white",
             wraplength=QUESTION_WRAPLENGTH,
@@ -456,7 +456,7 @@ class TestprogrammApp:
         tk.Button(
             button_frame,
             text="PASS",
-            font=("Arial", 12, "bold"),
+            font=("Arial", 14, "bold"),
             width=7,
             height=1,
             bg="#d9f7d9",
@@ -467,7 +467,7 @@ class TestprogrammApp:
         tk.Button(
             button_frame,
             text="FAIL",
-            font=("Arial", 12, "bold"),
+            font=("Arial", 14, "bold"),
             width=7,
             height=1,
             bg="#ffd9d9",
