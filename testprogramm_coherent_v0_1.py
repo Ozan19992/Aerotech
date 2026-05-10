@@ -29,7 +29,8 @@ class TestprogrammApp:
         self.root.title(APP_NAME)
         self.root.configure(bg="white")
         self.root.attributes("-fullscreen", True)
-        self.root.bind("<Escape>", lambda e: self.root.destroy())
+        self.root.bind("<Escape>", lambda e: self.on_close())
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.main_frame = tk.Frame(self.root, bg="white")
         self.main_frame.pack(expand=True, fill="both")
@@ -45,7 +46,10 @@ class TestprogrammApp:
         self.datetime_label = None
         self.selected_user_label = None
         self.datetime_after_id = None
+        self.monitor_after_id = None
+        self.pass_transition_after_id = None
         self.connection_check_running = False
+        self.internet_test_running = False
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -57,6 +61,13 @@ class TestprogrammApp:
             except tk.TclError:
                 pass
             self.datetime_after_id = None
+
+        if self.pass_transition_after_id is not None:
+            try:
+                self.root.after_cancel(self.pass_transition_after_id)
+            except tk.TclError:
+                pass
+            self.pass_transition_after_id = None
 
         for widget in self.main_frame.winfo_children():
             widget.destroy()
@@ -102,10 +113,12 @@ class TestprogrammApp:
         self.schedule_connection_check()
 
     def schedule_connection_check(self):
+        if not self.root.winfo_exists():
+            return
         if not self.connection_check_running:
             self.connection_check_running = True
             threading.Thread(target=self._connection_check_worker, daemon=True).start()
-        self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
+        self.monitor_after_id = self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
 
     def _connection_check_worker(self):
         connected = self.has_internet_connection()
@@ -207,6 +220,10 @@ class TestprogrammApp:
         self.start_internet_test()
 
     def start_internet_test(self):
+        if self.internet_test_running:
+            return
+        self.internet_test_running = True
+
         if self.status_label:
             self.status_label.config(text="Checking internet connection...", fg="black")
         if self.result_label:
@@ -218,7 +235,11 @@ class TestprogrammApp:
 
     def _internet_test_worker(self):
         connected = self.has_internet_connection()
-        self.root.after(0, lambda: self.update_internet_test_result(connected))
+        self.root.after(0, lambda: self._finish_internet_test(connected))
+
+    def _finish_internet_test(self, connected: bool):
+        self.internet_test_running = False
+        self.update_internet_test_result(connected)
 
     def update_internet_test_result(self, connected: bool):
         self.set_connection_state(connected)
@@ -228,7 +249,9 @@ class TestprogrammApp:
                 self.status_label.config(text="")
             if self.result_label:
                 self.result_label.config(text="PASS", fg="green")
-            self.root.after(PASS_TO_USER_DELAY_MS, self.show_user_selection_screen)
+            self.pass_transition_after_id = self.root.after(
+                PASS_TO_USER_DELAY_MS, self.show_user_selection_screen
+            )
         else:
             if self.status_label:
                 self.status_label.config(text="No Internet Connection", fg="black")
@@ -301,6 +324,16 @@ class TestprogrammApp:
     def select_user(self, user: str):
         if self.selected_user_label:
             self.selected_user_label.config(text=f"Ausgewählt: {user}")
+
+    def on_close(self):
+        if self.monitor_after_id is not None:
+            try:
+                self.root.after_cancel(self.monitor_after_id)
+            except tk.TclError:
+                pass
+            self.monitor_after_id = None
+        self.clear_screen()
+        self.root.destroy()
 
 
 if __name__ == "__main__":
