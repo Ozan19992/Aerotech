@@ -9,6 +9,11 @@ VERSION_TEXT = "Softwareversion: V0.1"
 NEXT_TITLE = "Internet Connection Test:"
 DURATION_MS = 5000
 UPDATE_MS = 50
+WIFI_ICON_X_OFFSET = -15
+WIFI_ICON_Y_OFFSET = 10
+WIFI_ICON_SIZE = (80, 60)
+WIFI_ARCS = [(10, 10, 70, 70), (20, 20, 60, 60), (30, 30, 50, 50)]
+WIFI_DOT = (36, 46, 44, 54)
 
 
 class TestprogrammApp:
@@ -78,8 +83,14 @@ class TestprogrammApp:
     def show_internet_screen(self):
         self.clear_screen()
 
-        self.wifi_canvas = tk.Canvas(self.main_frame, width=80, height=60, bg="white", highlightthickness=0)
-        self.wifi_canvas.place(relx=1.0, x=-15, y=10, anchor="ne")
+        self.wifi_canvas = tk.Canvas(
+            self.main_frame,
+            width=WIFI_ICON_SIZE[0],
+            height=WIFI_ICON_SIZE[1],
+            bg="white",
+            highlightthickness=0,
+        )
+        self.wifi_canvas.place(relx=1.0, x=WIFI_ICON_X_OFFSET, y=WIFI_ICON_Y_OFFSET, anchor="ne")
 
         heading = tk.Label(
             self.main_frame,
@@ -131,10 +142,9 @@ class TestprogrammApp:
     def draw_wifi_icon(self, color: str):
         c = self.wifi_canvas
         c.delete("all")
-        c.create_arc(10, 10, 70, 70, start=35, extent=110, style=tk.ARC, width=4, outline=color)
-        c.create_arc(20, 20, 60, 60, start=35, extent=110, style=tk.ARC, width=4, outline=color)
-        c.create_arc(30, 30, 50, 50, start=35, extent=110, style=tk.ARC, width=4, outline=color)
-        c.create_oval(36, 46, 44, 54, fill=color, outline=color)
+        for x1, y1, x2, y2 in WIFI_ARCS:
+            c.create_arc(x1, y1, x2, y2, start=35, extent=110, style=tk.ARC, width=4, outline=color)
+        c.create_oval(*WIFI_DOT, fill=color, outline=color)
 
     def update_connection_ui(self, connected: bool):
         if connected:
