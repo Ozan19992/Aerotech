@@ -1,21 +1,25 @@
 import socket
 import threading
 import tkinter as tk
+from datetime import datetime
 from tkinter import ttk
 
 APP_NAME = "Testprogramm Coherent V0.1"
 TITLE_TEXT = "Coherent Belp"
 VERSION_TEXT = "Softwareversion: V0.1"
-NEXT_TITLE = "Internet Connection Test:"
+INTERNET_TITLE = "Internet Connection Test:"
+USER_TITLE = "User Auswählen"
 DURATION_MS = 5000
 UPDATE_MS = 50
+MONITOR_INTERVAL_MS = 5000
+DNS_TEST_PORT = 53
+DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
+
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (80, 60)
 WIFI_ARCS = [(10, 10, 70, 70), (20, 20, 60, 60), (30, 30, 50, 50)]
 WIFI_DOT = (36, 46, 44, 54)
-DNS_TEST_PORT = 53
-DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 
 
 class TestprogrammApp:
@@ -30,19 +34,79 @@ class TestprogrammApp:
         self.main_frame.pack(expand=True, fill="both")
 
         self.elapsed = 0
+        self.connected = False
+
         self.progress = None
         self.status_label = None
         self.result_label = None
+        self.retry_button = None
         self.wifi_canvas = None
+        self.datetime_label = None
+        self.selected_user_label = None
 
         self.show_start_screen()
+        self.start_connection_monitor()
 
     def clear_screen(self):
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
+        self.progress = None
+        self.status_label = None
+        self.result_label = None
+        self.retry_button = None
+        self.wifi_canvas = None
+        self.datetime_label = None
+        self.selected_user_label = None
+
+    def add_wifi_icon(self):
+        self.wifi_canvas = tk.Canvas(
+            self.main_frame,
+            width=WIFI_ICON_SIZE[0],
+            height=WIFI_ICON_SIZE[1],
+            bg="white",
+            highlightthickness=0,
+        )
+        self.wifi_canvas.place(relx=1.0, x=WIFI_ICON_X_OFFSET, y=WIFI_ICON_Y_OFFSET, anchor="ne")
+        self.draw_wifi_icon("green" if self.connected else "red")
+
+    def draw_wifi_icon(self, color: str):
+        if not self.wifi_canvas:
+            return
+        c = self.wifi_canvas
+        c.delete("all")
+        for x1, y1, x2, y2 in WIFI_ARCS:
+            c.create_arc(x1, y1, x2, y2, start=35, extent=110, style=tk.ARC, width=4, outline=color)
+        c.create_oval(*WIFI_DOT, fill=color, outline=color)
+
+    def has_internet_connection(self) -> bool:
+        for host in DNS_TEST_SERVERS:
+            try:
+                with socket.create_connection((host, DNS_TEST_PORT), timeout=2):
+                    return True
+            except OSError:
+                continue
+        return False
+
+    def start_connection_monitor(self):
+        self.schedule_connection_check()
+
+    def schedule_connection_check(self):
+        threading.Thread(target=self._connection_check_worker, daemon=True).start()
+        self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
+
+    def _connection_check_worker(self):
+        connected = self.has_internet_connection()
+        self.root.after(0, lambda: self.set_connection_state(connected))
+
+    def set_connection_state(self, connected: bool):
+        self.connected = connected
+        self.draw_wifi_icon("green" if connected else "red")
+
     def show_start_screen(self):
         self.clear_screen()
+        self.elapsed = 0
+        self.add_wifi_icon()
 
         title_label = tk.Label(
             self.main_frame,
@@ -75,7 +139,8 @@ class TestprogrammApp:
 
     def animate_progress(self):
         self.elapsed += UPDATE_MS
-        self.progress["value"] = self.elapsed
+        if self.progress:
+            self.progress["value"] = self.elapsed
 
         if self.elapsed < DURATION_MS:
             self.root.after(UPDATE_MS, self.animate_progress)
@@ -84,21 +149,13 @@ class TestprogrammApp:
 
     def show_internet_screen(self):
         self.clear_screen()
-
-        self.wifi_canvas = tk.Canvas(
-            self.main_frame,
-            width=WIFI_ICON_SIZE[0],
-            height=WIFI_ICON_SIZE[1],
-            bg="white",
-            highlightthickness=0,
-        )
-        self.wifi_canvas.place(relx=1.0, x=WIFI_ICON_X_OFFSET, y=WIFI_ICON_Y_OFFSET, anchor="ne")
+        self.add_wifi_icon()
 
         heading = tk.Label(
             self.main_frame,
-            text=NEXT_TITLE,
+            text=INTERNET_TITLE,
             font=("Arial", 34, "bold"),
-            fg="black",
+            fg="blue",
             bg="white",
         )
         heading.pack(pady=(120, 40))
@@ -115,43 +172,119 @@ class TestprogrammApp:
         self.result_label = tk.Label(
             self.main_frame,
             text="",
-            font=("Arial", 26, "bold"),
+            font=("Arial", 30, "bold"),
             bg="white",
         )
         self.result_label.pack(pady=10)
 
-        threading.Thread(target=self.check_internet_connection, daemon=True).start()
+        self.retry_button = tk.Button(
+            self.main_frame,
+            text="Retry",
+            font=("Arial", 20, "bold"),
+            bg="#f0f0f0",
+            activebackground="#d9d9d9",
+            command=self.start_internet_test,
+            padx=30,
+            pady=12,
+        )
 
-    def check_internet_connection(self):
-        connected = False
+        self.start_internet_test()
 
-        for host in DNS_TEST_SERVERS:
-            port = DNS_TEST_PORT
-            try:
-                with socket.create_connection((host, port), timeout=2):
-                    connected = True
-                    break
-            except OSError:
-                continue
+    def start_internet_test(self):
+        if self.status_label:
+            self.status_label.config(text="Checking internet connection...", fg="black")
+        if self.result_label:
+            self.result_label.config(text="", fg="black")
+        if self.retry_button and self.retry_button.winfo_manager():
+            self.retry_button.pack_forget()
 
-        self.root.after(0, lambda: self.update_connection_ui(connected))
+        threading.Thread(target=self._internet_test_worker, daemon=True).start()
 
-    def draw_wifi_icon(self, color: str):
-        c = self.wifi_canvas
-        c.delete("all")
-        for x1, y1, x2, y2 in WIFI_ARCS:
-            c.create_arc(x1, y1, x2, y2, start=35, extent=110, style=tk.ARC, width=4, outline=color)
-        c.create_oval(*WIFI_DOT, fill=color, outline=color)
+    def _internet_test_worker(self):
+        connected = self.has_internet_connection()
+        self.root.after(0, lambda: self.update_internet_test_result(connected))
 
-    def update_connection_ui(self, connected: bool):
+    def update_internet_test_result(self, connected: bool):
+        self.set_connection_state(connected)
+
         if connected:
-            self.status_label.config(text="Internet Connected")
-            self.result_label.config(text="PASS", fg="green")
-            self.draw_wifi_icon("green")
+            if self.status_label:
+                self.status_label.config(text="")
+            if self.result_label:
+                self.result_label.config(text="PASS", fg="green")
+            self.root.after(700, self.show_user_selection_screen)
         else:
-            self.status_label.config(text="No Internet Connection")
-            self.result_label.config(text="FAIL", fg="red")
-            self.draw_wifi_icon("red")
+            if self.status_label:
+                self.status_label.config(text="No Internet Connection", fg="black")
+            if self.result_label:
+                self.result_label.config(text="FAIL", fg="red")
+            if self.retry_button and not self.retry_button.winfo_manager():
+                self.retry_button.pack(pady=20)
+
+    def show_user_selection_screen(self):
+        self.clear_screen()
+        self.add_wifi_icon()
+
+        self.datetime_label = tk.Label(
+            self.main_frame,
+            text="",
+            font=("Arial", 16, "bold"),
+            fg="black",
+            bg="white",
+        )
+        self.datetime_label.place(x=20, y=20, anchor="nw")
+        self.update_datetime()
+
+        heading = tk.Label(
+            self.main_frame,
+            text=USER_TITLE,
+            font=("Arial", 34, "bold"),
+            fg="black",
+            bg="white",
+        )
+        heading.pack(pady=(120, 40))
+
+        button_frame = tk.Frame(self.main_frame, bg="white")
+        button_frame.pack(pady=20)
+
+        vff_button = tk.Button(
+            button_frame,
+            text="VFF",
+            font=("Arial", 24, "bold"),
+            width=10,
+            height=2,
+            command=lambda: self.select_user("VFF"),
+        )
+        vff_button.grid(row=0, column=0, padx=20)
+
+        koo_button = tk.Button(
+            button_frame,
+            text="KOO",
+            font=("Arial", 24, "bold"),
+            width=10,
+            height=2,
+            command=lambda: self.select_user("KOO"),
+        )
+        koo_button.grid(row=0, column=1, padx=20)
+
+        self.selected_user_label = tk.Label(
+            self.main_frame,
+            text="",
+            font=("Arial", 20, "bold"),
+            fg="blue",
+            bg="white",
+        )
+        self.selected_user_label.pack(pady=20)
+
+    def update_datetime(self):
+        if self.datetime_label and self.datetime_label.winfo_exists():
+            now_text = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+            self.datetime_label.config(text=now_text)
+            self.root.after(1000, self.update_datetime)
+
+    def select_user(self, user: str):
+        if self.selected_user_label:
+            self.selected_user_label.config(text=f"Ausgewählt: {user}")
 
 
 if __name__ == "__main__":
