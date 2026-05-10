@@ -27,6 +27,8 @@ WIFI_ICON_SIZE = (64, 48)
 WIFI_ARCS = [(8, 8, 56, 56), (16, 16, 48, 48), (24, 24, 40, 40)]
 WIFI_DOT = (29, 35, 35, 41)
 USER_BADGE_SPACING = 28
+# Max text width (px) for question labels, tuned for 3.5" (480 px wide) display.
+QUESTION_WRAPLENGTH = 450
 
 
 class TestprogrammApp:
@@ -433,7 +435,7 @@ class TestprogrammApp:
                 font=("Arial", 11, "bold"),
                 fg="green",
                 bg="white",
-                wraplength=450,
+                wraplength=QUESTION_WRAPLENGTH,
                 justify="center",
             ).pack(pady=20)
             return
@@ -444,7 +446,7 @@ class TestprogrammApp:
             font=("Arial", 11, "bold"),
             fg="black",
             bg="white",
-            wraplength=450,
+            wraplength=QUESTION_WRAPLENGTH,
             justify="center",
         ).pack(padx=8, pady=8)
 
