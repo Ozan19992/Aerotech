@@ -14,6 +14,7 @@ UPDATE_MS = 50
 MONITOR_INTERVAL_MS = 5000
 PASS_TO_USER_DELAY_MS = 700
 DNS_TEST_PORT = 53
+# DNS endpoints for connectivity probing (Cloudflare, Google, Quad9).
 DNS_TEST_SERVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
 CONNECT_TIMEOUT_SEC = 1.0
 
@@ -52,6 +53,8 @@ class TestprogrammApp:
         self.pass_transition_after_id = None
         self.connection_check_running = False
         self.internet_test_running = False
+        self.monitor_lock = threading.Lock()
+        self.internet_test_lock = threading.Lock()
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -112,6 +115,7 @@ class TestprogrammApp:
     def has_internet_connection(self) -> bool:
         for host in DNS_TEST_SERVERS:
             try:
+                # Successful connect is the connectivity test; socket is auto-closed by context manager.
                 with socket.create_connection((host, DNS_TEST_PORT), timeout=CONNECT_TIMEOUT_SEC):
                     return True
             except OSError:
@@ -125,10 +129,10 @@ class TestprogrammApp:
         if not self.root.winfo_exists():
             return
 
-        if self.connection_check_running:
-            return
-
-        self.connection_check_running = True
+        with self.monitor_lock:
+            if self.connection_check_running:
+                return
+            self.connection_check_running = True
         threading.Thread(target=self._connection_check_worker, daemon=True).start()
 
     def _connection_check_worker(self):
@@ -136,7 +140,8 @@ class TestprogrammApp:
         self.root.after(0, lambda: self._apply_connection_check_result(connected))
 
     def _apply_connection_check_result(self, connected: bool):
-        self.connection_check_running = False
+        with self.monitor_lock:
+            self.connection_check_running = False
         self.set_connection_state(connected)
         if self.root.winfo_exists():
             self.monitor_after_id = self.root.after(MONITOR_INTERVAL_MS, self.schedule_connection_check)
@@ -234,9 +239,10 @@ class TestprogrammApp:
         self.start_internet_test()
 
     def start_internet_test(self):
-        if self.internet_test_running:
-            return
-        self.internet_test_running = True
+        with self.internet_test_lock:
+            if self.internet_test_running:
+                return
+            self.internet_test_running = True
 
         if self.status_label:
             self.status_label.config(text="Checking internet connection...", fg="black")
@@ -252,7 +258,8 @@ class TestprogrammApp:
         self.root.after(0, lambda: self._finish_internet_test(connected))
 
     def _finish_internet_test(self, connected: bool):
-        self.internet_test_running = False
+        with self.internet_test_lock:
+            self.internet_test_running = False
         self.update_internet_test_result(connected)
 
     def update_internet_test_result(self, connected: bool):
@@ -330,7 +337,7 @@ class TestprogrammApp:
         self.selected_user_label.pack(pady=20)
 
     def update_datetime(self):
-        if self.datetime_label and self.datetime_label.winfo_exists():
+        if self.root.winfo_exists() and self.datetime_label and self.datetime_label.winfo_exists():
             now_text = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
             self.datetime_label.config(text=now_text)
             self.datetime_after_id = self.root.after(1000, self.update_datetime)
