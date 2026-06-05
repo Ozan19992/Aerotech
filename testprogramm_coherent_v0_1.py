@@ -39,14 +39,16 @@ MCP3008_VREF = 3.3
 MCP3008_UPDATE_MS = 1000
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
-MCP3008_SAMPLES_PER_CHANNEL = 15
-MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
+MCP3008_SAMPLES_PER_CHANNEL = 21
+MCP3008_TRIMMED_SAMPLES_PER_SIDE = 3
 # Gemessene Referenz für MCP3008 #1 CH1: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
 MCP3008_CH1_CALIBRATION_INPUT_VOLTS = 24.0
 MCP3008_CH1_CALIBRATION_RAW_LOW = 506.0
 MCP3008_CH1_CALIBRATION_RAW_HIGH = 508.4
 MCP3008_CH1_CALIBRATION_RAW_MIDPOINT = (MCP3008_CH1_CALIBRATION_RAW_LOW + MCP3008_CH1_CALIBRATION_RAW_HIGH) / 2
-MCP3008_CH1_SMOOTHING_ALPHA = 0.2
+MCP3008_CH1_TARGET_DISPLAY_VOLTS = 24.0
+MCP3008_CH1_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
+MCP3008_CH1_SMOOTHING_ALPHA = 0.12
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
@@ -55,6 +57,8 @@ MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {
     (0, 1): {
         "input_volts_per_raw": MCP3008_CH1_CALIBRATION_INPUT_VOLTS / MCP3008_CH1_CALIBRATION_RAW_MIDPOINT,
         "input_decimals": 2,
+        "display_target_volts": MCP3008_CH1_TARGET_DISPLAY_VOLTS,
+        "display_target_tolerance_percent": MCP3008_CH1_TARGET_DISPLAY_TOLERANCE_PERCENT,
         "smoothing_alpha": MCP3008_CH1_SMOOTHING_ALPHA,
     },
 }
@@ -513,6 +517,12 @@ class TestprogrammApp:
             return f"CH{channel}: {adc_voltage:.3f} V (raw avg {avg_raw:.1f})"
 
         input_voltage = avg_raw * calibration["input_volts_per_raw"]
+        display_target_volts = calibration.get("display_target_volts")
+        display_target_tolerance_percent = calibration.get("display_target_tolerance_percent")
+        if display_target_volts is not None and display_target_tolerance_percent is not None:
+            tolerance_volts = abs(display_target_volts) * (max(display_target_tolerance_percent, 0.0) / 100.0)
+            if abs(input_voltage - display_target_volts) <= tolerance_volts:
+                input_voltage = float(display_target_volts)
         input_decimals = calibration.get("input_decimals", 2)
         return (
             f"CH{channel}: {input_voltage:.{input_decimals}f} V "
