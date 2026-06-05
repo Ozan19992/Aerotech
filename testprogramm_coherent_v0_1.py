@@ -41,27 +41,32 @@ MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
 MCP3008_SAMPLES_PER_CHANNEL = 15
 MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
-# Gemessene Referenz für MCP3008 #1 CH1: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
-MCP3008_CH1_CALIBRATION_INPUT_VOLTS = 24.0
-MCP3008_CH1_CALIBRATION_RAW_LOW = 506.0
-MCP3008_CH1_CALIBRATION_RAW_HIGH = 508.4
-MCP3008_CH1_CALIBRATION_RAW_MIDPOINT = (MCP3008_CH1_CALIBRATION_RAW_LOW + MCP3008_CH1_CALIBRATION_RAW_HIGH) / 2
-MCP3008_CH1_TARGET_DISPLAY_VOLTS = 24.0
-MCP3008_CH1_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
-MCP3008_CH1_SMOOTHING_ALPHA = 0.12
+# Gemessene Referenz: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
+MCP3008_CALIBRATION_INPUT_VOLTS = 24.0
+MCP3008_CALIBRATION_RAW_LOW = 506.0
+MCP3008_CALIBRATION_RAW_HIGH = 508.4
+MCP3008_CALIBRATION_RAW_MIDPOINT = (MCP3008_CALIBRATION_RAW_LOW + MCP3008_CALIBRATION_RAW_HIGH) / 2
+MCP3008_TARGET_DISPLAY_VOLTS = 24.0
+MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
+MCP3008_SMOOTHING_ALPHA = 0.12
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
 ]
-MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {
-    (0, 1): {
-        "input_volts_per_raw": MCP3008_CH1_CALIBRATION_INPUT_VOLTS / MCP3008_CH1_CALIBRATION_RAW_MIDPOINT,
-        "input_decimals": 2,
-        "display_target_volts": MCP3008_CH1_TARGET_DISPLAY_VOLTS,
-        "display_target_tolerance_percent": MCP3008_CH1_TARGET_DISPLAY_TOLERANCE_PERCENT,
-        "smoothing_alpha": MCP3008_CH1_SMOOTHING_ALPHA,
-    },
-}
+MCP3008_TARGET_CHANNELS_BY_CHIP = [
+    list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
+    [3, 4, 5, 6],  # MCP3008 #2: CH3-CH6
+]
+MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {}
+for chip_index, channels in enumerate(MCP3008_TARGET_CHANNELS_BY_CHIP):
+    for channel in channels:
+        MCP3008_CHANNEL_DISPLAY_CALIBRATIONS[(chip_index, channel)] = {
+            "input_volts_per_raw": MCP3008_CALIBRATION_INPUT_VOLTS / MCP3008_CALIBRATION_RAW_MIDPOINT,
+            "input_decimals": 2,
+            "display_target_volts": MCP3008_TARGET_DISPLAY_VOLTS,
+            "display_target_tolerance_percent": MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT,
+            "smoothing_alpha": MCP3008_SMOOTHING_ALPHA,
+        }
 SOFT_SPI_CLK_PIN = 13
 SOFT_SPI_MISO_PIN = 19
 SOFT_SPI_MOSI_PIN = 26
@@ -116,6 +121,9 @@ class TestprogrammApp:
         self.mcp_readers = None
         self.mcp_error_message = None
         self.mcp_smoothed_raw_values: dict[tuple[int, int], float] = {}
+        self.mcp_status_label = None
+        self.voltage_test_result: str | None = None
+        self.voltage_test_lines: list[str] = []
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -163,6 +171,7 @@ class TestprogrammApp:
         self.question_result_label = None
         self.mcp_data_labels = []
         self.mcp_smoothed_raw_values = {}
+        self.mcp_status_label = None
 
     def add_wifi_icon(self):
         self.wifi_canvas = tk.Canvas(
@@ -440,6 +449,8 @@ class TestprogrammApp:
         if self.selected_user:
             self.test_start_time = datetime.now()
             self.question_answers = []
+            self.voltage_test_result = None
+            self.voltage_test_lines = []
             self.show_question_screen(0)
 
     def _init_mcp_readers(self):
@@ -472,33 +483,54 @@ class TestprogrammApp:
     def add_mcp_voltage_panel(self):
         self._init_mcp_readers()
 
-        panel = tk.Frame(self.main_frame, bg="white", highlightbackground="#cccccc", highlightthickness=1)
-        panel.pack(fill="x", padx=8, pady=(4, 8))
+        panel = tk.Frame(self.main_frame, bg="#f8fbff", highlightbackground="#b8c7d9", highlightthickness=1)
+        panel.pack(fill="x", padx=8, pady=(6, 10))
 
         tk.Label(
             panel,
-            text="MCP3008 Spannungsmessung",
-            font=("Arial", 14, "bold"),
-            fg="black",
-            bg="white",
-        ).pack(pady=(6, 4))
+            text="Spannungstest MCP3008",
+            font=("Arial", 15, "bold"),
+            fg="#0b3d91",
+            bg="#f8fbff",
+        ).pack(pady=(8, 0))
+        tk.Label(
+            panel,
+            text=f"Sollwert: {MCP3008_TARGET_DISPLAY_VOLTS:.2f} V (Toleranz ±{MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT:.1f}%)",
+            font=("Arial", 10),
+            fg="#264b73",
+            bg="#f8fbff",
+        ).pack(pady=(2, 6))
 
-        values_frame = tk.Frame(panel, bg="white")
-        values_frame.pack(fill="x", padx=8, pady=(0, 6))
+        values_frame = tk.Frame(panel, bg="#f8fbff")
+        values_frame.pack(fill="x", padx=8, pady=(0, 4))
 
         self.mcp_data_labels = []
         for idx, select_pin in enumerate(MCP3008_SELECT_PINS):
             label = tk.Label(
                 values_frame,
-                text=f"MCP3008 #{idx + 1} (CS GPIO {select_pin})\nWarte auf Daten...",
-                font=("Arial", 11),
-                fg="black",
-                bg="white",
+                text=f"MCP3008 #{idx + 1} (CS GPIO {select_pin})\nMessung läuft...",
+                font=("Courier New", 10, "bold"),
+                fg="#1d2a3a",
+                bg="#eef4fb",
                 justify="left",
                 anchor="nw",
+                padx=10,
+                pady=8,
+                relief="groove",
+                bd=1,
             )
-            label.grid(row=0, column=idx, sticky="nw", padx=8)
+            label.grid(row=0, column=idx, sticky="nsew", padx=6)
             self.mcp_data_labels.append(label)
+            values_frame.columnconfigure(idx, weight=1)
+
+        self.mcp_status_label = tk.Label(
+            panel,
+            text="Prüfung wird vorbereitet...",
+            font=("Arial", 11, "bold"),
+            fg="#1d2a3a",
+            bg="#f8fbff",
+        )
+        self.mcp_status_label.pack(pady=(4, 8))
 
         self.update_mcp_voltage_panel()
 
@@ -510,24 +542,34 @@ class TestprogrammApp:
             raw_values = raw_values[trim_count:-trim_count]
         return sum(raw_values) / len(raw_values)
 
-    def _format_mcp_channel_measurement(self, chip_index: int, channel: int, avg_raw: float):
+    def _get_mcp_channel_measurement(self, chip_index: int, channel: int, avg_raw: float):
         adc_voltage = avg_raw * MCP3008_VOLTS_PER_BIT
         calibration = MCP3008_CHANNEL_DISPLAY_CALIBRATIONS.get((chip_index, channel))
         if calibration is None:
-            return f"CH{channel}: {adc_voltage:.3f} V (raw avg {avg_raw:.1f})"
+            return {
+                "display_voltage": adc_voltage,
+                "adc_voltage": adc_voltage,
+                "raw_avg": avg_raw,
+                "in_tolerance": True,
+                "has_target": False,
+            }
 
         input_voltage = avg_raw * calibration["input_volts_per_raw"]
         display_target_volts = calibration.get("display_target_volts")
         display_target_tolerance_percent = calibration.get("display_target_tolerance_percent")
+        in_tolerance = True
         if display_target_volts is not None and display_target_tolerance_percent is not None:
             tolerance_volts = abs(display_target_volts) * (abs(display_target_tolerance_percent) / 100.0)
-            if abs(input_voltage - display_target_volts) <= tolerance_volts:
+            in_tolerance = abs(input_voltage - display_target_volts) <= tolerance_volts
+            if in_tolerance:
                 input_voltage = float(display_target_volts)
-        input_decimals = calibration.get("input_decimals", 2)
-        return (
-            f"CH{channel}: {input_voltage:.{input_decimals}f} V "
-            f"(ADC {adc_voltage:.3f} V, raw avg {avg_raw:.1f})"
-        )
+        return {
+            "display_voltage": input_voltage,
+            "adc_voltage": adc_voltage,
+            "raw_avg": avg_raw,
+            "in_tolerance": in_tolerance,
+            "has_target": display_target_volts is not None and display_target_tolerance_percent is not None,
+        }
 
     def _get_smoothed_mcp_raw(self, chip_index: int, channel: int, raw_avg: float):
         calibration = MCP3008_CHANNEL_DISPLAY_CALIBRATIONS.get((chip_index, channel), {})
@@ -542,6 +584,27 @@ class TestprogrammApp:
         self.mcp_smoothed_raw_values[key] = smoothed
         return smoothed
 
+    def _collect_mcp_measurements(self):
+        if self.mcp_error_message is not None or not self.mcp_readers:
+            return None
+
+        measurements = []
+        for idx, chip_channels in enumerate(self.mcp_readers):
+            visible_channels = (
+                MCP3008_VISIBLE_CHANNELS_BY_CHIP[idx]
+                if idx < len(MCP3008_VISIBLE_CHANNELS_BY_CHIP)
+                else list(range(MCP3008_NUM_CHANNELS))
+            )
+            chip_measurements = []
+            for channel in visible_channels:
+                adc = chip_channels[channel]
+                avg_raw = self._get_filtered_mcp_raw_average(adc)
+                smoothed_raw = self._get_smoothed_mcp_raw(idx, channel, avg_raw)
+                measurement = self._get_mcp_channel_measurement(idx, channel, smoothed_raw)
+                chip_measurements.append((channel, measurement))
+            measurements.append(chip_measurements)
+        return measurements
+
     def update_mcp_voltage_panel(self):
         if not self.mcp_data_labels:
             return
@@ -550,32 +613,72 @@ class TestprogrammApp:
             self.mcp_data_labels[0].config(text=self.mcp_error_message, fg="red")
             for label in self.mcp_data_labels[1:]:
                 label.config(text="")
+            if self.mcp_status_label:
+                self.mcp_status_label.config(text="Spannungstest: FEHLER", fg="red")
         elif not self.mcp_readers:
             self.mcp_data_labels[0].config(text="MCP3008 nicht initialisiert.", fg="red")
             for label in self.mcp_data_labels[1:]:
                 label.config(text="")
+            if self.mcp_status_label:
+                self.mcp_status_label.config(text="Spannungstest: FEHLER", fg="red")
         else:
             try:
-                for idx, chip_channels in enumerate(self.mcp_readers):
-                    lines = [f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})"]
-                    visible_channels = (
-                        MCP3008_VISIBLE_CHANNELS_BY_CHIP[idx]
-                        if idx < len(MCP3008_VISIBLE_CHANNELS_BY_CHIP)
-                        else list(range(MCP3008_NUM_CHANNELS))
-                    )
-                    for channel in visible_channels:
-                        adc = chip_channels[channel]
-                        avg_raw = self._get_filtered_mcp_raw_average(adc)
-                        smoothed_raw = self._get_smoothed_mcp_raw(idx, channel, avg_raw)
-                        lines.append(self._format_mcp_channel_measurement(idx, channel, smoothed_raw))
-                    self.mcp_data_labels[idx].config(text="\n".join(lines), fg="black")
+                measurements = self._collect_mcp_measurements()
+                overall_voltage_pass = True
+                for idx, chip_measurements in enumerate(measurements or []):
+                    lines = [
+                        f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})",
+                        "CH   SPANNUNG   STATUS   ADC(V)",
+                    ]
+                    for channel, measurement in chip_measurements:
+                        status_text = "OK" if measurement["in_tolerance"] else "NOK"
+                        lines.append(
+                            f"{channel:>2}   {measurement['display_voltage']:>7.2f} V   {status_text:<6}   {measurement['adc_voltage']:>5.3f}"
+                        )
+                        if measurement["has_target"] and not measurement["in_tolerance"]:
+                            overall_voltage_pass = False
+                    self.mcp_data_labels[idx].config(text="\n".join(lines), fg="#1d2a3a")
+
+                if self.mcp_status_label:
+                    status_text = "PASS" if overall_voltage_pass else "FAIL"
+                    status_color = "green" if overall_voltage_pass else "red"
+                    self.mcp_status_label.config(text=f"Aktueller Spannungstest: {status_text}", fg=status_color)
             except Exception as exc:
                 self.mcp_data_labels[0].config(text=f"Messfehler: {exc}", fg="red")
                 for label in self.mcp_data_labels[1:]:
                     label.config(text="")
+                if self.mcp_status_label:
+                    self.mcp_status_label.config(text="Spannungstest: FEHLER", fg="red")
 
         if self.root.winfo_exists():
             self.mcp_after_id = self.root.after(MCP3008_UPDATE_MS, self.update_mcp_voltage_panel)
+
+    def _evaluate_voltage_test(self):
+        if self.mcp_error_message is not None:
+            return "FAIL", [self.mcp_error_message]
+        if not self.mcp_readers:
+            return "FAIL", ["MCP3008 nicht initialisiert."]
+
+        measurements = self._collect_mcp_measurements()
+        if measurements is None:
+            return "FAIL", ["Keine Messdaten verfügbar."]
+
+        lines = []
+        overall_voltage_pass = True
+        for chip_index, chip_measurements in enumerate(measurements):
+            for channel, measurement in chip_measurements:
+                if not measurement["has_target"]:
+                    continue
+                status = "PASS" if measurement["in_tolerance"] else "FAIL"
+                lines.append(
+                    f"MCP3008 #{chip_index + 1} CH{channel}: {measurement['display_voltage']:.2f} V ({status})"
+                )
+                if not measurement["in_tolerance"]:
+                    overall_voltage_pass = False
+
+        if not lines:
+            return "FAIL", ["Keine Zielkanäle für den Spannungstest konfiguriert."]
+        return ("PASS" if overall_voltage_pass else "FAIL"), lines
 
     def show_question_screen(self, question_index: int):
         self.clear_screen()
@@ -625,28 +728,9 @@ class TestprogrammApp:
             fg="black",
             bg="white",
         ).pack(pady=(4, 4))
-        self.add_mcp_voltage_panel()
 
         if question_index >= len(QUESTION_TEXTS):
-            test_end_time = datetime.now()
-            overall = self._generate_report(test_end_time)
-            result_color = "green" if overall == "PASS" else "red"
-            tk.Label(
-                self.main_frame,
-                text="Alle Fragen erfolgreich abgeschlossen.",
-                font=("Arial", 14, "bold"),
-                fg="green",
-                bg="white",
-                wraplength=QUESTION_WRAPLENGTH,
-                justify="center",
-            ).pack(pady=(20, 4))
-            tk.Label(
-                self.main_frame,
-                text=f"Gesamtergebnis: {overall}",
-                font=("Arial", 30, "bold"),
-                fg=result_color,
-                bg="white",
-            ).pack(pady=(4, 20))
+            self.show_voltage_test_screen()
             return
 
         tk.Label(
@@ -695,15 +779,130 @@ class TestprogrammApp:
 
     def on_question_pass(self, current_index: int):
         self.question_answers.append("PASS")
-        self.show_question_screen(current_index + 1)
+        next_index = current_index + 1
+        if next_index >= len(QUESTION_TEXTS):
+            self.show_voltage_test_screen()
+            return
+        self.show_question_screen(next_index)
 
     def on_question_fail(self, current_index: int):
         self.question_answers.append("FAIL")
-        self.show_question_screen(current_index + 1)
+        next_index = current_index + 1
+        if next_index >= len(QUESTION_TEXTS):
+            self.show_voltage_test_screen()
+            return
+        self.show_question_screen(next_index)
+
+    def show_voltage_test_screen(self):
+        self.clear_screen()
+
+        header = tk.Frame(self.main_frame, bg="white")
+        header.pack(fill="x", padx=4, pady=2)
+        header.columnconfigure(0, weight=1)
+        header.columnconfigure(1, weight=1)
+        header.columnconfigure(2, weight=0)
+
+        self.datetime_label = tk.Label(
+            header,
+            text="",
+            font=("Arial", 16, "bold"),
+            fg="black",
+            bg="white",
+            anchor="w",
+        )
+        self.datetime_label.grid(row=0, column=0, sticky="w")
+        self.update_datetime()
+
+        selected_user_text = self.selected_user if self.selected_user else "Unbekannt"
+        tk.Label(
+            header,
+            text=f"User: {selected_user_text}",
+            font=("Arial", 16, "bold"),
+            fg="black",
+            bg="white",
+            anchor="center",
+        ).grid(row=0, column=1)
+
+        self.wifi_canvas = tk.Canvas(
+            header,
+            width=WIFI_ICON_SIZE[0],
+            height=WIFI_ICON_SIZE[1],
+            bg="white",
+            highlightthickness=0,
+        )
+        self.wifi_canvas.grid(row=0, column=2, sticky="e")
+        self.draw_wifi_icon("green" if self.connected else "red")
+
+        tk.Label(
+            self.main_frame,
+            text="Fragen abgeschlossen – finaler Spannungstest",
+            font=("Arial", 17, "bold"),
+            fg="#0b3d91",
+            bg="white",
+        ).pack(pady=(8, 2))
+
+        self.add_mcp_voltage_panel()
+
+        tk.Button(
+            self.main_frame,
+            text="Weiter zum Gesamtergebnis",
+            font=("Arial", 18, "bold"),
+            bg="#d8ebff",
+            activebackground="#c3defa",
+            padx=16,
+            pady=8,
+            command=self.finish_voltage_test,
+        ).pack(pady=(6, 10))
+
+    def finish_voltage_test(self):
+        voltage_result, voltage_lines = self._evaluate_voltage_test()
+        self.voltage_test_result = voltage_result
+        self.voltage_test_lines = voltage_lines
+        self.show_final_result_screen()
+
+    def show_final_result_screen(self):
+        self.clear_screen()
+        self.add_wifi_icon()
+
+        test_end_time = datetime.now()
+        overall = self._generate_report(test_end_time)
+        result_color = "green" if overall == "PASS" else "red"
+        voltage_color = "green" if self.voltage_test_result == "PASS" else "red"
+
+        tk.Label(
+            self.main_frame,
+            text="Test abgeschlossen",
+            font=("Arial", 24, "bold"),
+            fg="#0b3d91",
+            bg="white",
+        ).pack(pady=(40, 12))
+        tk.Label(
+            self.main_frame,
+            text=f"Fragen: {'PASS' if self.question_answers and all(a == 'PASS' for a in self.question_answers) else 'FAIL'}",
+            font=("Arial", 18, "bold"),
+            fg="green" if self.question_answers and all(a == "PASS" for a in self.question_answers) else "red",
+            bg="white",
+        ).pack(pady=4)
+        tk.Label(
+            self.main_frame,
+            text=f"Spannungstest: {self.voltage_test_result or 'FAIL'}",
+            font=("Arial", 18, "bold"),
+            fg=voltage_color,
+            bg="white",
+        ).pack(pady=4)
+        tk.Label(
+            self.main_frame,
+            text=f"Gesamtergebnis: {overall}",
+            font=("Arial", 32, "bold"),
+            fg=result_color,
+            bg="white",
+        ).pack(pady=(12, 20))
 
     def _generate_report(self, end_time: datetime) -> str:
         """Write a TXT report to the desktop and return the overall result string."""
-        overall = "PASS" if self.question_answers and all(a == "PASS" for a in self.question_answers) else "FAIL"
+        questions_pass = bool(self.question_answers) and all(a == "PASS" for a in self.question_answers)
+        voltage_pass = self.voltage_test_result == "PASS"
+        overall = "PASS" if questions_pass and voltage_pass else "FAIL"
 
         desktop = Path.home() / "Desktop"
         desktop.mkdir(parents=True, exist_ok=True)
@@ -737,6 +936,11 @@ class TestprogrammApp:
             ):
                 f.write(f"  {question}\n")
                 f.write(f"  Ergebnis: {answer}\n\n")
+            f.write("Spannungstest:\n")
+            f.write(f"  Ergebnis: {self.voltage_test_result or 'FAIL'}\n")
+            for line in self.voltage_test_lines:
+                f.write(f"  {line}\n")
+            f.write("\n")
             f.write("=" * 45 + "\n")
             f.write(f"Gesamtergebnis: {overall}\n")
 
