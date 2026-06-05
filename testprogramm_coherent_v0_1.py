@@ -41,11 +41,12 @@ MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
 MCP3008_SAMPLES_PER_CHANNEL = 15
 MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
-# Gemessene Referenz für MCP3008 #1 CH1: 24 V Eingang ergeben typischerweise raw 509-512.
+# Gemessene Referenz für MCP3008 #1 CH1: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
 MCP3008_CH1_CALIBRATION_INPUT_VOLTS = 24.0
-MCP3008_CH1_CALIBRATION_RAW_LOW = 509
-MCP3008_CH1_CALIBRATION_RAW_HIGH = 512
+MCP3008_CH1_CALIBRATION_RAW_LOW = 506.0
+MCP3008_CH1_CALIBRATION_RAW_HIGH = 508.4
 MCP3008_CH1_CALIBRATION_RAW_MIDPOINT = (MCP3008_CH1_CALIBRATION_RAW_LOW + MCP3008_CH1_CALIBRATION_RAW_HIGH) / 2
+MCP3008_CH1_SMOOTHING_ALPHA = 0.2
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
@@ -54,6 +55,7 @@ MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {
     (0, 1): {
         "input_volts_per_raw": MCP3008_CH1_CALIBRATION_INPUT_VOLTS / MCP3008_CH1_CALIBRATION_RAW_MIDPOINT,
         "input_decimals": 2,
+        "smoothing_alpha": MCP3008_CH1_SMOOTHING_ALPHA,
     },
 }
 SOFT_SPI_CLK_PIN = 13
@@ -109,6 +111,7 @@ class TestprogrammApp:
         self.mcp_after_id = None
         self.mcp_readers = None
         self.mcp_error_message = None
+        self.mcp_smoothed_raw_values: dict[tuple[int, int], float] = {}
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -155,6 +158,7 @@ class TestprogrammApp:
         self.confirm_user_button = None
         self.question_result_label = None
         self.mcp_data_labels = []
+        self.mcp_smoothed_raw_values = {}
 
     def add_wifi_icon(self):
         self.wifi_canvas = tk.Canvas(
@@ -515,6 +519,19 @@ class TestprogrammApp:
             f"(ADC {adc_voltage:.3f} V, raw avg {avg_raw:.1f})"
         )
 
+    def _get_smoothed_mcp_raw(self, chip_index: int, channel: int, raw_avg: float):
+        calibration = MCP3008_CHANNEL_DISPLAY_CALIBRATIONS.get((chip_index, channel), {})
+        alpha = calibration.get("smoothing_alpha", 1.0)
+        alpha = max(0.0, min(1.0, alpha))
+        key = (chip_index, channel)
+        previous = self.mcp_smoothed_raw_values.get(key)
+        if previous is None or alpha >= 1.0:
+            smoothed = raw_avg
+        else:
+            smoothed = (alpha * raw_avg) + ((1.0 - alpha) * previous)
+        self.mcp_smoothed_raw_values[key] = smoothed
+        return smoothed
+
     def update_mcp_voltage_panel(self):
         if not self.mcp_data_labels:
             return
@@ -539,7 +556,8 @@ class TestprogrammApp:
                     for channel in visible_channels:
                         adc = chip_channels[channel]
                         avg_raw = self._get_filtered_mcp_raw_average(adc)
-                        lines.append(self._format_mcp_channel_measurement(idx, channel, avg_raw))
+                        smoothed_raw = self._get_smoothed_mcp_raw(idx, channel, avg_raw)
+                        lines.append(self._format_mcp_channel_measurement(idx, channel, smoothed_raw))
                     self.mcp_data_labels[idx].config(text="\n".join(lines), fg="black")
             except Exception as exc:
                 self.mcp_data_labels[0].config(text=f"Messfehler: {exc}", fg="red")
