@@ -41,13 +41,18 @@ MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
 MCP3008_SAMPLES_PER_CHANNEL = 15
 MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
+# Gemessene Referenz für MCP3008 #1 CH1: 24 V Eingang ergeben typischerweise raw 509-512.
+MCP3008_CH1_CALIBRATION_INPUT_VOLTS = 24.0
+MCP3008_CH1_CALIBRATION_RAW_LOW = 509
+MCP3008_CH1_CALIBRATION_RAW_HIGH = 512
+MCP3008_CH1_CALIBRATION_RAW_MIDPOINT = (MCP3008_CH1_CALIBRATION_RAW_LOW + MCP3008_CH1_CALIBRATION_RAW_HIGH) / 2
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
 ]
 MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {
     (0, 1): {
-        "input_volts_per_raw": 24.0 / ((509 + 512) / 2),
+        "input_volts_per_raw": MCP3008_CH1_CALIBRATION_INPUT_VOLTS / MCP3008_CH1_CALIBRATION_RAW_MIDPOINT,
         "input_decimals": 2,
     },
 }
@@ -491,7 +496,8 @@ class TestprogrammApp:
 
     def _get_filtered_mcp_raw_average(self, adc):
         raw_values = sorted(adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL))
-        trim_count = min(MCP3008_TRIMMED_SAMPLES_PER_SIDE, max(0, (len(raw_values) - 1) // 2))
+        max_trim_count = max(0, (len(raw_values) - 1) // 2)
+        trim_count = min(MCP3008_TRIMMED_SAMPLES_PER_SIDE, max_trim_count)
         if trim_count > 0:
             raw_values = raw_values[trim_count:-trim_count]
         return sum(raw_values) / len(raw_values)
