@@ -40,7 +40,10 @@ MCP3008_UPDATE_MS = 1000
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
 MCP3008_SAMPLES_PER_CHANNEL = 5
-MCP3008_VISIBLE_CHANNELS = [3, 4, 5, 6]
+MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
+    list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
+    [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
+]
 SOFT_SPI_CLK_PIN = 13
 SOFT_SPI_MISO_PIN = 19
 SOFT_SPI_MOSI_PIN = 26
@@ -495,7 +498,12 @@ class TestprogrammApp:
             try:
                 for idx, chip_channels in enumerate(self.mcp_readers):
                     lines = [f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})"]
-                    for channel in MCP3008_VISIBLE_CHANNELS:
+                    visible_channels = (
+                        MCP3008_VISIBLE_CHANNELS_BY_CHIP[idx]
+                        if idx < len(MCP3008_VISIBLE_CHANNELS_BY_CHIP)
+                        else list(range(MCP3008_NUM_CHANNELS))
+                    )
+                    for channel in visible_channels:
                         adc = chip_channels[channel]
                         raw_values = [adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL)]
                         avg_raw = sum(raw_values) / len(raw_values)
