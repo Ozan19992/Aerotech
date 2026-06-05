@@ -39,11 +39,18 @@ MCP3008_VREF = 3.3
 MCP3008_UPDATE_MS = 1000
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
-MCP3008_SAMPLES_PER_CHANNEL = 5
+MCP3008_SAMPLES_PER_CHANNEL = 15
+MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
 ]
+MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {
+    (0, 1): {
+        "input_volts_per_raw": 24.0 / ((509 + 512) / 2),
+        "input_decimals": 2,
+    },
+}
 SOFT_SPI_CLK_PIN = 13
 SOFT_SPI_MISO_PIN = 19
 SOFT_SPI_MOSI_PIN = 26
@@ -482,6 +489,26 @@ class TestprogrammApp:
 
         self.update_mcp_voltage_panel()
 
+    def _get_filtered_mcp_raw_average(self, adc):
+        raw_values = sorted(adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL))
+        trim_count = min(MCP3008_TRIMMED_SAMPLES_PER_SIDE, max(0, (len(raw_values) - 1) // 2))
+        if trim_count > 0:
+            raw_values = raw_values[trim_count:-trim_count]
+        return sum(raw_values) / len(raw_values)
+
+    def _format_mcp_channel_measurement(self, chip_index: int, channel: int, avg_raw: float):
+        adc_voltage = avg_raw * MCP3008_VOLTS_PER_BIT
+        calibration = MCP3008_CHANNEL_DISPLAY_CALIBRATIONS.get((chip_index, channel))
+        if calibration is None:
+            return f"CH{channel}: {adc_voltage:.3f} V (raw avg {avg_raw:.1f})"
+
+        input_voltage = avg_raw * calibration["input_volts_per_raw"]
+        input_decimals = calibration.get("input_decimals", 2)
+        return (
+            f"CH{channel}: {input_voltage:.{input_decimals}f} V "
+            f"(ADC {adc_voltage:.3f} V, raw avg {avg_raw:.1f})"
+        )
+
     def update_mcp_voltage_panel(self):
         if not self.mcp_data_labels:
             return
@@ -505,11 +532,8 @@ class TestprogrammApp:
                     )
                     for channel in visible_channels:
                         adc = chip_channels[channel]
-                        raw_values = [adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL)]
-                        avg_raw = sum(raw_values) / len(raw_values)
-                        rounded_avg_raw = int(round(avg_raw))
-                        voltage = rounded_avg_raw * MCP3008_VOLTS_PER_BIT
-                        lines.append(f"CH{channel}: {voltage:.3f} V (raw {rounded_avg_raw})")
+                        avg_raw = self._get_filtered_mcp_raw_average(adc)
+                        lines.append(self._format_mcp_channel_measurement(idx, channel, avg_raw))
                     self.mcp_data_labels[idx].config(text="\n".join(lines), fg="black")
             except Exception as exc:
                 self.mcp_data_labels[0].config(text=f"Messfehler: {exc}", fg="red")
