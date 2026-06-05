@@ -5,6 +5,13 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import ttk
 
+try:
+    from gpiozero import MCP3008 as GPIOZERO_MCP3008
+    MCP3008_IMPORT_ERROR = None
+except Exception as exc:
+    GPIOZERO_MCP3008 = None
+    MCP3008_IMPORT_ERROR = exc
+
 APP_NAME = "Testprogramm Coherent V0.1"
 TITLE_TEXT = "Coherent Belp"
 VERSION_TEXT = "Softwareversion: V0.1"
@@ -27,6 +34,13 @@ QUESTION_TEXTS = [
     "Frage 6: Sind Defekte an der Isolation oder Krimpungen zu erkennen?",
 ]
 REPORT_FILENAME_PREFIX = "PSV_Test"
+MCP3008_NUM_CHANNELS = 8
+MCP3008_VREF = 3.3
+MCP3008_UPDATE_MS = 1000
+SOFT_SPI_CLK_PIN = 13
+SOFT_SPI_MISO_PIN = 19
+SOFT_SPI_MOSI_PIN = 26
+MCP3008_SELECT_PINS = [5, 6]
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (64, 48)
@@ -72,6 +86,10 @@ class TestprogrammApp:
         self.internet_test_lock = threading.Lock()
         self.test_start_time: datetime | None = None
         self.question_answers: list[str] = []
+        self.mcp_data_labels: list[tk.Label] = []
+        self.mcp_after_id = None
+        self.mcp_readers = None
+        self.mcp_error_message = None
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -98,6 +116,13 @@ class TestprogrammApp:
                 pass
             self.pass_transition_after_id = None
 
+        if self.mcp_after_id is not None:
+            try:
+                self.root.after_cancel(self.mcp_after_id)
+            except tk.TclError:
+                pass
+            self.mcp_after_id = None
+
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
@@ -110,6 +135,7 @@ class TestprogrammApp:
         self.selected_user_label = None
         self.confirm_user_button = None
         self.question_result_label = None
+        self.mcp_data_labels = []
 
     def add_wifi_icon(self):
         self.wifi_canvas = tk.Canvas(
@@ -389,6 +415,94 @@ class TestprogrammApp:
             self.question_answers = []
             self.show_question_screen(0)
 
+    def _init_mcp_readers(self):
+        if self.mcp_readers is not None:
+            return
+        if GPIOZERO_MCP3008 is None:
+            self.mcp_error_message = f"MCP3008 nicht verfügbar: {MCP3008_IMPORT_ERROR}"
+            return
+
+        try:
+            readers = []
+            for select_pin in MCP3008_SELECT_PINS:
+                chip_channels = []
+                for channel in range(MCP3008_NUM_CHANNELS):
+                    chip_channels.append(
+                        GPIOZERO_MCP3008(
+                            channel=channel,
+                            clock_pin=SOFT_SPI_CLK_PIN,
+                            mosi_pin=SOFT_SPI_MOSI_PIN,
+                            miso_pin=SOFT_SPI_MISO_PIN,
+                            select_pin=select_pin,
+                        )
+                    )
+                readers.append(chip_channels)
+            self.mcp_readers = readers
+            self.mcp_error_message = None
+        except Exception as exc:
+            self.mcp_error_message = f"MCP3008 Initialisierung fehlgeschlagen: {exc}"
+
+    def add_mcp_voltage_panel(self):
+        self._init_mcp_readers()
+
+        panel = tk.Frame(self.main_frame, bg="white", highlightbackground="#cccccc", highlightthickness=1)
+        panel.pack(fill="x", padx=8, pady=(4, 8))
+
+        tk.Label(
+            panel,
+            text="MCP3008 Spannungsmessung",
+            font=("Arial", 14, "bold"),
+            fg="black",
+            bg="white",
+        ).pack(pady=(6, 4))
+
+        values_frame = tk.Frame(panel, bg="white")
+        values_frame.pack(fill="x", padx=8, pady=(0, 6))
+
+        self.mcp_data_labels = []
+        for idx, select_pin in enumerate(MCP3008_SELECT_PINS):
+            label = tk.Label(
+                values_frame,
+                text=f"MCP3008 #{idx + 1} (CS GPIO {select_pin})\nWarte auf Daten...",
+                font=("Arial", 11),
+                fg="black",
+                bg="white",
+                justify="left",
+                anchor="nw",
+            )
+            label.grid(row=0, column=idx, sticky="nw", padx=8)
+            self.mcp_data_labels.append(label)
+
+        self.update_mcp_voltage_panel()
+
+    def update_mcp_voltage_panel(self):
+        if not self.mcp_data_labels:
+            return
+
+        if self.mcp_error_message is not None:
+            self.mcp_data_labels[0].config(text=self.mcp_error_message, fg="red")
+            for label in self.mcp_data_labels[1:]:
+                label.config(text="")
+        elif not self.mcp_readers:
+            self.mcp_data_labels[0].config(text="MCP3008 nicht initialisiert.", fg="red")
+            for label in self.mcp_data_labels[1:]:
+                label.config(text="")
+        else:
+            try:
+                for idx, chip_channels in enumerate(self.mcp_readers):
+                    lines = [f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})"]
+                    for channel, adc in enumerate(chip_channels):
+                        voltage = adc.value * MCP3008_VREF
+                        lines.append(f"CH{channel}: {voltage:.3f} V")
+                    self.mcp_data_labels[idx].config(text="\n".join(lines), fg="black")
+            except Exception as exc:
+                self.mcp_data_labels[0].config(text=f"Messfehler: {exc}", fg="red")
+                for label in self.mcp_data_labels[1:]:
+                    label.config(text="")
+
+        if self.root.winfo_exists():
+            self.mcp_after_id = self.root.after(MCP3008_UPDATE_MS, self.update_mcp_voltage_panel)
+
     def show_question_screen(self, question_index: int):
         self.clear_screen()
 
@@ -437,6 +551,7 @@ class TestprogrammApp:
             fg="black",
             bg="white",
         ).pack(pady=(4, 4))
+        self.add_mcp_voltage_panel()
 
         if question_index >= len(QUESTION_TEXTS):
             test_end_time = datetime.now()
