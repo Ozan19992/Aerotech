@@ -39,8 +39,8 @@ MCP3008_VREF = 3.3
 MCP3008_UPDATE_MS = 1000
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
-MCP3008_SAMPLES_PER_CHANNEL = 21
-MCP3008_TRIMMED_SAMPLES_PER_SIDE = 3
+MCP3008_SAMPLES_PER_CHANNEL = 15
+MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
 # Gemessene Referenz für MCP3008 #1 CH1: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
 MCP3008_CH1_CALIBRATION_INPUT_VOLTS = 24.0
 MCP3008_CH1_CALIBRATION_RAW_LOW = 506.0
@@ -520,7 +520,7 @@ class TestprogrammApp:
         display_target_volts = calibration.get("display_target_volts")
         display_target_tolerance_percent = calibration.get("display_target_tolerance_percent")
         if display_target_volts is not None and display_target_tolerance_percent is not None:
-            tolerance_volts = abs(display_target_volts) * (max(display_target_tolerance_percent, 0.0) / 100.0)
+            tolerance_volts = abs(display_target_volts) * (abs(display_target_tolerance_percent) / 100.0)
             if abs(input_voltage - display_target_volts) <= tolerance_volts:
                 input_voltage = float(display_target_volts)
         input_decimals = calibration.get("input_decimals", 2)
