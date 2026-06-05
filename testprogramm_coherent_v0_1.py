@@ -37,6 +37,10 @@ REPORT_FILENAME_PREFIX = "PSV_Test"
 MCP3008_NUM_CHANNELS = 8
 MCP3008_VREF = 3.3
 MCP3008_UPDATE_MS = 1000
+MCP3008_ADC_MAX_VALUE = 1023
+MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
+MCP3008_SAMPLES_PER_CHANNEL = 5
+MCP3008_VISIBLE_CHANNELS = [3, 4, 5, 6]
 SOFT_SPI_CLK_PIN = 13
 SOFT_SPI_MISO_PIN = 19
 SOFT_SPI_MOSI_PIN = 26
@@ -491,9 +495,13 @@ class TestprogrammApp:
             try:
                 for idx, chip_channels in enumerate(self.mcp_readers):
                     lines = [f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})"]
-                    for channel, adc in enumerate(chip_channels):
-                        voltage = adc.value * MCP3008_VREF
-                        lines.append(f"CH{channel}: {voltage:.3f} V")
+                    for channel in MCP3008_VISIBLE_CHANNELS:
+                        adc = chip_channels[channel]
+                        raw_values = [adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL)]
+                        avg_raw = sum(raw_values) / len(raw_values)
+                        rounded_avg_raw = int(round(avg_raw))
+                        voltage = rounded_avg_raw * MCP3008_VOLTS_PER_BIT
+                        lines.append(f"CH{channel}: {voltage:.3f} V (raw {rounded_avg_raw})")
                     self.mcp_data_labels[idx].config(text="\n".join(lines), fg="black")
             except Exception as exc:
                 self.mcp_data_labels[0].config(text=f"Messfehler: {exc}", fg="red")
