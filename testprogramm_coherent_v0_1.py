@@ -50,6 +50,7 @@ MCP3008_TARGET_DISPLAY_VOLTS = 24.0
 MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
 MCP3008_SMOOTHING_ALPHA_RISE = 0.35
 MCP3008_SMOOTHING_ALPHA_FALL = 0.65
+MCP3008_SMOOTHING_ALPHA_DEADBAND = 0.10
 MCP3008_SMOOTHING_DEADBAND_RAW = 0.8
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
@@ -539,7 +540,8 @@ class TestprogrammApp:
         self.update_mcp_voltage_panel()
 
     def _get_filtered_mcp_raw_average(self, adc):
-        raw_values = sorted(adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL))
+        raw_values = [adc.raw_value for _ in range(MCP3008_SAMPLES_PER_CHANNEL)]
+        raw_values.sort()
         max_trim_count = max(0, (len(raw_values) - 1) // 2)
         trim_count = min(MCP3008_TRIMMED_SAMPLES_PER_SIDE, max_trim_count)
         if trim_count > 0:
@@ -587,7 +589,7 @@ class TestprogrammApp:
         else:
             delta = raw_avg - previous
             if abs(delta) <= deadband_raw:
-                alpha = 0.10
+                alpha = MCP3008_SMOOTHING_ALPHA_DEADBAND
             else:
                 alpha = alpha_rise if delta > 0 else alpha_fall
             smoothed = previous + (alpha * delta)
