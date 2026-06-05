@@ -681,6 +681,10 @@ class TestprogrammApp:
         return ("PASS" if overall_voltage_pass else "FAIL"), lines
 
     def show_question_screen(self, question_index: int):
+        if question_index >= len(QUESTION_TEXTS):
+            self.show_voltage_test_screen()
+            return
+
         self.clear_screen()
 
         # Header: Datum links | User mittig | WLAN rechts
@@ -728,10 +732,6 @@ class TestprogrammApp:
             fg="black",
             bg="white",
         ).pack(pady=(4, 4))
-
-        if question_index >= len(QUESTION_TEXTS):
-            self.show_voltage_test_screen()
-            return
 
         tk.Label(
             self.main_frame,
