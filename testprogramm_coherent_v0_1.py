@@ -36,7 +36,7 @@ QUESTION_TEXTS = [
 REPORT_FILENAME_PREFIX = "PSV_Test"
 MCP3008_NUM_CHANNELS = 8
 MCP3008_VREF = 3.3
-MCP3008_UPDATE_MS = 1000
+MCP3008_UPDATE_MS = 400
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
 MCP3008_SAMPLES_PER_CHANNEL = 15
@@ -48,7 +48,9 @@ MCP3008_CALIBRATION_RAW_HIGH = 508.4
 MCP3008_CALIBRATION_RAW_MIDPOINT = (MCP3008_CALIBRATION_RAW_LOW + MCP3008_CALIBRATION_RAW_HIGH) / 2
 MCP3008_TARGET_DISPLAY_VOLTS = 24.0
 MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
-MCP3008_SMOOTHING_ALPHA = 0.12
+MCP3008_SMOOTHING_ALPHA_RISE = 0.35
+MCP3008_SMOOTHING_ALPHA_FALL = 0.65
+MCP3008_SMOOTHING_DEADBAND_RAW = 0.8
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
@@ -65,7 +67,9 @@ for chip_index, channels in enumerate(MCP3008_TARGET_CHANNELS_BY_CHIP):
             "input_decimals": 2,
             "display_target_volts": MCP3008_TARGET_DISPLAY_VOLTS,
             "display_target_tolerance_percent": MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT,
-            "smoothing_alpha": MCP3008_SMOOTHING_ALPHA,
+            "smoothing_alpha_rise": MCP3008_SMOOTHING_ALPHA_RISE,
+            "smoothing_alpha_fall": MCP3008_SMOOTHING_ALPHA_FALL,
+            "smoothing_deadband_raw": MCP3008_SMOOTHING_DEADBAND_RAW,
         }
 SOFT_SPI_CLK_PIN = 13
 SOFT_SPI_MISO_PIN = 19
@@ -573,14 +577,20 @@ class TestprogrammApp:
 
     def _get_smoothed_mcp_raw(self, chip_index: int, channel: int, raw_avg: float):
         calibration = MCP3008_CHANNEL_DISPLAY_CALIBRATIONS.get((chip_index, channel), {})
-        alpha = calibration.get("smoothing_alpha", 1.0)
-        alpha = max(0.0, min(1.0, alpha))
+        alpha_rise = max(0.0, min(1.0, calibration.get("smoothing_alpha_rise", 1.0)))
+        alpha_fall = max(0.0, min(1.0, calibration.get("smoothing_alpha_fall", alpha_rise)))
+        deadband_raw = max(0.0, float(calibration.get("smoothing_deadband_raw", 0.0)))
         key = (chip_index, channel)
         previous = self.mcp_smoothed_raw_values.get(key)
-        if previous is None or alpha >= 1.0:
+        if previous is None:
             smoothed = raw_avg
         else:
-            smoothed = (alpha * raw_avg) + ((1.0 - alpha) * previous)
+            delta = raw_avg - previous
+            if abs(delta) <= deadband_raw:
+                alpha = 0.10
+            else:
+                alpha = alpha_rise if delta > 0 else alpha_fall
+            smoothed = previous + (alpha * delta)
         self.mcp_smoothed_raw_values[key] = smoothed
         return smoothed
 
@@ -835,11 +845,13 @@ class TestprogrammApp:
 
         tk.Label(
             self.main_frame,
-            text="Fragen abgeschlossen – finaler Spannungstest",
+            text="X2 I/0 Test",
             font=("Arial", 17, "bold"),
             fg="#0b3d91",
             bg="white",
-        ).pack(pady=(8, 2))
+            anchor="center",
+            justify="center",
+        ).pack(fill="x", pady=(8, 2))
 
         self.add_mcp_voltage_panel()
 
