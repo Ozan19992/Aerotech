@@ -12,6 +12,13 @@ except Exception as exc:
     GPIOZERO_MCP3008 = None
     MCP3008_IMPORT_ERROR = exc
 
+try:
+    from gpiozero import OutputDevice as GPIOZERO_OutputDevice
+    GPIO20_IMPORT_ERROR = None
+except Exception as exc:
+    GPIOZERO_OutputDevice = None
+    GPIO20_IMPORT_ERROR = exc
+
 APP_NAME = "Testprogramm Coherent V0.1"
 TITLE_TEXT = "Coherent Belp"
 VERSION_TEXT = "Softwareversion: V0.1"
@@ -92,6 +99,7 @@ SOFT_SPI_CLK_PIN = 13
 SOFT_SPI_MISO_PIN = 19
 SOFT_SPI_MOSI_PIN = 26
 MCP3008_SELECT_PINS = [5, 6]
+GPIO20_OUTPUT_PIN = 20
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (64, 48)
@@ -145,6 +153,9 @@ class TestprogrammApp:
         self.mcp_status_label = None
         self.voltage_test_result: str | None = None
         self.voltage_test_lines: list[str] = []
+        self.gpio20_output = None
+        self.gpio20_status_label = None
+        self.gpio20_error_message = None
 
         self.show_start_screen()
         self.start_connection_monitor()
@@ -193,6 +204,7 @@ class TestprogrammApp:
         self.mcp_data_labels = []
         self.mcp_smoothed_raw_values = {}
         self.mcp_status_label = None
+        self.gpio20_status_label = None
 
     def add_wifi_icon(self):
         self.wifi_canvas = tk.Canvas(
@@ -500,6 +512,40 @@ class TestprogrammApp:
             self.mcp_error_message = None
         except Exception as exc:
             self.mcp_error_message = f"MCP3008 Initialisierung fehlgeschlagen: {exc}"
+
+    def _init_gpio20_output(self):
+        if self.gpio20_output is not None:
+            return
+        if GPIOZERO_OutputDevice is None:
+            self.gpio20_error_message = f"GPIO 20 nicht verfügbar: {GPIO20_IMPORT_ERROR}"
+            return
+
+        try:
+            self.gpio20_output = GPIOZERO_OutputDevice(GPIO20_OUTPUT_PIN, active_high=True, initial_value=False)
+            self.gpio20_error_message = None
+        except Exception as exc:
+            self.gpio20_error_message = f"GPIO 20 Initialisierung fehlgeschlagen: {exc}"
+
+    def set_gpio20_high(self):
+        self._init_gpio20_output()
+
+        if self.gpio20_error_message is not None:
+            if self.gpio20_status_label:
+                self.gpio20_status_label.config(text=self.gpio20_error_message, fg="red")
+            return
+
+        if self.gpio20_output is None:
+            if self.gpio20_status_label:
+                self.gpio20_status_label.config(text="GPIO 20 konnte nicht initialisiert werden.", fg="red")
+            return
+
+        try:
+            self.gpio20_output.on()
+            if self.gpio20_status_label:
+                self.gpio20_status_label.config(text="GPIO 20 ist jetzt HIGH.", fg="green")
+        except Exception as exc:
+            if self.gpio20_status_label:
+                self.gpio20_status_label.config(text=f"GPIO 20 konnte nicht gesetzt werden: {exc}", fg="red")
 
     def add_mcp_voltage_panel(self):
         self._init_mcp_readers()
@@ -882,6 +928,29 @@ class TestprogrammApp:
 
         self.add_mcp_voltage_panel()
 
+        gpio20_frame = tk.Frame(self.main_frame, bg="white")
+        gpio20_frame.pack(fill="x", pady=(4, 2))
+
+        tk.Button(
+            gpio20_frame,
+            text="GPIO 20 HIGH",
+            font=("Arial", 18, "bold"),
+            bg="#fff2cc",
+            activebackground="#ffe599",
+            padx=16,
+            pady=8,
+            command=self.set_gpio20_high,
+        ).pack()
+
+        self.gpio20_status_label = tk.Label(
+            gpio20_frame,
+            text="",
+            font=("Arial", 14, "bold"),
+            fg="#1d2a3a",
+            bg="white",
+        )
+        self.gpio20_status_label.pack(pady=(6, 0))
+
         tk.Button(
             self.main_frame,
             text="Weiter zum Gesamtergebnis",
@@ -992,6 +1061,12 @@ class TestprogrammApp:
             except tk.TclError:
                 pass
             self.monitor_after_id = None
+        if self.gpio20_output is not None:
+            try:
+                self.gpio20_output.close()
+            except Exception:
+                pass
+            self.gpio20_output = None
         self.clear_screen()
         self.root.destroy()
 
