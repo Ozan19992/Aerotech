@@ -36,11 +36,11 @@ QUESTION_TEXTS = [
 REPORT_FILENAME_PREFIX = "PSV_Test"
 MCP3008_NUM_CHANNELS = 8
 MCP3008_VREF = 3.3
-MCP3008_UPDATE_MS = 400
+MCP3008_UPDATE_MS = 250
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
-MCP3008_SAMPLES_PER_CHANNEL = 15
-MCP3008_TRIMMED_SAMPLES_PER_SIDE = 2
+MCP3008_SAMPLES_PER_CHANNEL = 9
+MCP3008_TRIMMED_SAMPLES_PER_SIDE = 1
 # Gemessene Referenz: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
 MCP3008_CALIBRATION_INPUT_VOLTS = 24.0
 MCP3008_CALIBRATION_RAW_LOW = 506.0
@@ -48,10 +48,14 @@ MCP3008_CALIBRATION_RAW_HIGH = 508.4
 MCP3008_CALIBRATION_RAW_MIDPOINT = (MCP3008_CALIBRATION_RAW_LOW + MCP3008_CALIBRATION_RAW_HIGH) / 2
 MCP3008_TARGET_DISPLAY_VOLTS = 24.0
 MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
-MCP3008_SMOOTHING_ALPHA_RISE = 0.35
-MCP3008_SMOOTHING_ALPHA_FALL = 0.65
-MCP3008_SMOOTHING_ALPHA_DEADBAND = 0.10
-MCP3008_SMOOTHING_DEADBAND_RAW = 0.8
+MCP3008_SMOOTHING_ALPHA_RISE = 0.55
+MCP3008_SMOOTHING_ALPHA_FALL = 0.80
+MCP3008_SMOOTHING_ALPHA_DEADBAND = 0.20
+MCP3008_SMOOTHING_DEADBAND_RAW = 0.6
+MCP3008_STATE_GND_ADC_MAX = 0.006
+MCP3008_STATE_OPEN_ADC_MAX = 0.030
+MCP3008_STATE_24V_ADC_MIN = 1.45
+MCP3008_STATE_24V_ADC_MAX = 1.85
 MCP3008_VISIBLE_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: nur CH3-CH6 anzeigen
@@ -550,6 +554,14 @@ class TestprogrammApp:
 
     def _get_mcp_channel_measurement(self, chip_index: int, channel: int, avg_raw: float):
         adc_voltage = avg_raw * MCP3008_VOLTS_PER_BIT
+        if adc_voltage <= MCP3008_STATE_GND_ADC_MAX:
+            input_state = "GND"
+        elif adc_voltage <= MCP3008_STATE_OPEN_ADC_MAX:
+            input_state = "OFFEN"
+        elif MCP3008_STATE_24V_ADC_MIN <= adc_voltage <= MCP3008_STATE_24V_ADC_MAX:
+            input_state = "24V"
+        else:
+            input_state = "ZWISCHEN"
         calibration = MCP3008_CHANNEL_DISPLAY_CALIBRATIONS.get((chip_index, channel))
         if calibration is None:
             return {
@@ -558,6 +570,7 @@ class TestprogrammApp:
                 "raw_avg": avg_raw,
                 "in_tolerance": True,
                 "has_target": False,
+                "input_state": input_state,
             }
 
         input_voltage = avg_raw * calibration["input_volts_per_raw"]
@@ -575,6 +588,7 @@ class TestprogrammApp:
             "raw_avg": avg_raw,
             "in_tolerance": in_tolerance,
             "has_target": display_target_volts is not None and display_target_tolerance_percent is not None,
+            "input_state": input_state,
         }
 
     def _get_smoothed_mcp_raw(self, chip_index: int, channel: int, raw_avg: float):
@@ -640,12 +654,12 @@ class TestprogrammApp:
                 for idx, chip_measurements in enumerate(measurements or []):
                     lines = [
                         f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})",
-                        "CH   SPANNUNG   STATUS   ADC(V)",
+                        "CH   SPANNUNG   STATUS   ZUSTAND   ADC(V)",
                     ]
                     for channel, measurement in chip_measurements:
                         status_text = "OK" if measurement["in_tolerance"] else "NOK"
                         lines.append(
-                            f"{channel:>2}   {measurement['display_voltage']:>7.2f} V   {status_text:<6}   {measurement['adc_voltage']:>5.3f}"
+                            f"{channel:>2}   {measurement['display_voltage']:>7.2f} V   {status_text:<6}   {measurement['input_state']:<8}   {measurement['adc_voltage']:>5.3f}"
                         )
                         if measurement["has_target"] and not measurement["in_tolerance"]:
                             overall_voltage_pass = False
