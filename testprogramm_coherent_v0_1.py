@@ -36,10 +36,10 @@ QUESTION_TEXTS = [
 REPORT_FILENAME_PREFIX = "PSV_Test"
 MCP3008_NUM_CHANNELS = 8
 MCP3008_VREF = 3.3
-MCP3008_UPDATE_MS = 250
+MCP3008_UPDATE_MS = 150
 MCP3008_ADC_MAX_VALUE = 1023
 MCP3008_VOLTS_PER_BIT = MCP3008_VREF / MCP3008_ADC_MAX_VALUE
-MCP3008_SAMPLES_PER_CHANNEL = 9
+MCP3008_SAMPLES_PER_CHANNEL = 5
 MCP3008_TRIMMED_SAMPLES_PER_SIDE = 1
 # Gemessene Referenz: 24 V Eingang ergeben typischerweise raw 506.0-508.4.
 MCP3008_CALIBRATION_INPUT_VOLTS = 24.0
@@ -48,10 +48,15 @@ MCP3008_CALIBRATION_RAW_HIGH = 508.4
 MCP3008_CALIBRATION_RAW_MIDPOINT = (MCP3008_CALIBRATION_RAW_LOW + MCP3008_CALIBRATION_RAW_HIGH) / 2
 MCP3008_TARGET_DISPLAY_VOLTS = 24.0
 MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT = 1.0
+# Schnellere Annäherung nach Spannungswechsel: ansteigend schnell, abfallend noch schneller.
+MCP3008_SMOOTHING_ALPHA_STABLE = 0.20
 MCP3008_SMOOTHING_ALPHA_RISE = 0.55
 MCP3008_SMOOTHING_ALPHA_FALL = 0.80
-MCP3008_SMOOTHING_ALPHA_DEADBAND = 0.20
 MCP3008_SMOOTHING_DEADBAND_RAW = 0.6
+# Zustandsfenster aus Messwerten:
+# <=0.006 V ADC: GND angeschlossen
+# <=0.030 V ADC: Eingang offen / kein Signal
+# 1.45-1.85 V ADC: entspricht 24 V Eingang nach Teiler/Kalibration
 MCP3008_STATE_GND_ADC_MAX = 0.006
 MCP3008_STATE_OPEN_ADC_MAX = 0.030
 MCP3008_STATE_24V_ADC_MIN = 1.45
@@ -603,7 +608,7 @@ class TestprogrammApp:
         else:
             delta = raw_avg - previous
             if abs(delta) <= deadband_raw:
-                alpha = MCP3008_SMOOTHING_ALPHA_DEADBAND
+                alpha = MCP3008_SMOOTHING_ALPHA_STABLE
             else:
                 alpha = alpha_rise if delta > 0 else alpha_fall
             smoothed = previous + (alpha * delta)
