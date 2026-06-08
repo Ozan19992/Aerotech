@@ -69,6 +69,13 @@ MCP3008_TARGET_CHANNELS_BY_CHIP = [
     list(range(MCP3008_NUM_CHANNELS)),  # MCP3008 #1: CH0-CH7
     [3, 4, 5, 6],  # MCP3008 #2: CH3-CH6
 ]
+# Klartextbezeichnungen für Klemmen auf dem Anschluss X2
+# MCP3008 #1: CH0=PIN 12 X2 ... CH7=PIN 5 X2
+# MCP3008 #2: CH3=PIN 4 X2  ... CH6=PIN 1 X2
+MCP3008_CHANNEL_PIN_LABELS = [
+    {ch: f"PIN {12 - ch} X2" for ch in range(8)},
+    {3: "PIN 4 X2", 4: "PIN 3 X2", 5: "PIN 2 X2", 6: "PIN 1 X2"},
+]
 MCP3008_CHANNEL_DISPLAY_CALIBRATIONS = {}
 for chip_index, channels in enumerate(MCP3008_TARGET_CHANNELS_BY_CHIP):
     for channel in channels:
@@ -502,28 +509,22 @@ class TestprogrammApp:
 
         tk.Label(
             panel,
-            text="Spannungstest MCP3008",
-            font=("Arial", 15, "bold"),
-            fg="#0b3d91",
-            bg="#f8fbff",
-        ).pack(pady=(8, 0))
-        tk.Label(
-            panel,
-            text=f"Sollwert: {MCP3008_TARGET_DISPLAY_VOLTS:.2f} V (Toleranz ±{MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT:.1f}%)",
-            font=("Arial", 10),
+            text=f"Sollwert: {MCP3008_TARGET_DISPLAY_VOLTS:.2f} V  |  Toleranz ±{MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT:.1f}%",
+            font=("Arial", 14, "bold"),
             fg="#264b73",
             bg="#f8fbff",
-        ).pack(pady=(2, 6))
+        ).pack(pady=(8, 6))
 
         values_frame = tk.Frame(panel, bg="#f8fbff")
         values_frame.pack(fill="x", padx=8, pady=(0, 4))
+        values_frame.columnconfigure(0, weight=1)
 
         self.mcp_data_labels = []
         for idx, select_pin in enumerate(MCP3008_SELECT_PINS):
             label = tk.Label(
                 values_frame,
                 text=f"MCP3008 #{idx + 1} (CS GPIO {select_pin})\nMessung läuft...",
-                font=("Courier New", 10, "bold"),
+                font=("Courier New", 13, "bold"),
                 fg="#1d2a3a",
                 bg="#eef4fb",
                 justify="left",
@@ -533,14 +534,13 @@ class TestprogrammApp:
                 relief="groove",
                 bd=1,
             )
-            label.grid(row=0, column=idx, sticky="nsew", padx=6)
+            label.grid(row=idx, column=0, sticky="ew", padx=6, pady=3)
             self.mcp_data_labels.append(label)
-            values_frame.columnconfigure(idx, weight=1)
 
         self.mcp_status_label = tk.Label(
             panel,
             text="Prüfung wird vorbereitet...",
-            font=("Arial", 11, "bold"),
+            font=("Arial", 14, "bold"),
             fg="#1d2a3a",
             bg="#f8fbff",
         )
@@ -657,14 +657,20 @@ class TestprogrammApp:
                 measurements = self._collect_mcp_measurements()
                 overall_voltage_pass = True
                 for idx, chip_measurements in enumerate(measurements or []):
+                    pin_map = (
+                        MCP3008_CHANNEL_PIN_LABELS[idx]
+                        if idx < len(MCP3008_CHANNEL_PIN_LABELS)
+                        else {}
+                    )
                     lines = [
                         f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})",
-                        "CH   SPANNUNG   STATUS   ZUSTAND   ADC(V)",
+                        f"{'PIN':<12}  {'SPANNUNG':>9}  {'STATUS':>5}  ZUSTAND",
                     ]
                     for channel, measurement in chip_measurements:
-                        status_text = "OK" if measurement["in_tolerance"] else "NOK"
+                        pin_label = pin_map.get(channel, f"CH{channel}")
+                        status_text = "OK " if measurement["in_tolerance"] else "NOK"
                         lines.append(
-                            f"{channel:>2}   {measurement['display_voltage']:>7.2f} V   {status_text:<6}   {measurement['input_state']:<8}   {measurement['adc_voltage']:>5.3f}"
+                            f"{pin_label:<12}  {measurement['display_voltage']:>7.2f} V  {status_text:<5}  {measurement['input_state']}"
                         )
                         if measurement["has_target"] and not measurement["in_tolerance"]:
                             overall_voltage_pass = False
@@ -867,7 +873,7 @@ class TestprogrammApp:
         tk.Label(
             self.main_frame,
             text="X2 I/0 Test",
-            font=("Arial", 17, "bold"),
+            font=("Arial", 22, "bold"),
             fg="#0b3d91",
             bg="white",
             anchor="center",
