@@ -154,6 +154,7 @@ class TestprogrammApp:
         self.voltage_test_result: str | None = None
         self.voltage_test_lines: list[str] = []
         self.gpio20_output = None
+        self.gpio20_button = None
         self.gpio20_status_label = None
         self.gpio20_error_message = None
 
@@ -204,6 +205,7 @@ class TestprogrammApp:
         self.mcp_data_labels = []
         self.mcp_smoothed_raw_values = {}
         self.mcp_status_label = None
+        self.gpio20_button = None
         self.gpio20_status_label = None
         self.gpio20_error_message = None
 
@@ -542,6 +544,8 @@ class TestprogrammApp:
 
         try:
             self.gpio20_output.on()
+            if self.gpio20_button:
+                self.gpio20_button.config(state="disabled")
             if self.gpio20_status_label:
                 self.gpio20_status_label.config(text="GPIO 20 ist jetzt HIGH (bis Programmende).", fg="green")
         except Exception as exc:
@@ -932,7 +936,7 @@ class TestprogrammApp:
         gpio20_frame = tk.Frame(self.main_frame, bg="white")
         gpio20_frame.pack(fill="x", pady=(4, 2))
 
-        tk.Button(
+        self.gpio20_button = tk.Button(
             gpio20_frame,
             text="GPIO 20 HIGH",
             font=("Arial", 18, "bold"),
@@ -941,7 +945,8 @@ class TestprogrammApp:
             padx=16,
             pady=8,
             command=self.set_gpio20_high,
-        ).pack()
+        )
+        self.gpio20_button.pack()
 
         self.gpio20_status_label = tk.Label(
             gpio20_frame,
@@ -1063,6 +1068,10 @@ class TestprogrammApp:
                 pass
             self.monitor_after_id = None
         if self.gpio20_output is not None:
+            try:
+                self.gpio20_output.off()
+            except Exception:
+                pass
             try:
                 self.gpio20_output.close()
             except Exception:
