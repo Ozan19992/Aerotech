@@ -571,10 +571,10 @@ class TestprogrammApp:
         values_frame.columnconfigure(0, weight=1)
 
         self.mcp_data_labels = []
-        for idx, select_pin in enumerate(MCP3008_SELECT_PINS):
+        for idx in range(len(MCP3008_SELECT_PINS)):
             label = tk.Label(
                 values_frame,
-                text=f"MCP3008 #{idx + 1} (CS GPIO {select_pin})\nMessung läuft...",
+                text="Messung läuft...",
                 font=("Courier New", 13, "bold"),
                 fg="#1d2a3a",
                 bg="#eef4fb",
@@ -713,10 +713,7 @@ class TestprogrammApp:
                         if idx < len(MCP3008_CHANNEL_PIN_LABELS)
                         else {}
                     )
-                    lines = [
-                        f"MCP3008 #{idx + 1} (CS GPIO {MCP3008_SELECT_PINS[idx]})",
-                        f"{'PIN':<12}  {'SPANNUNG':>9}  {'STATUS':>5}  ZUSTAND",
-                    ]
+                    lines = [f"{'PIN':<12}  {'SPANNUNG':>9}  {'STATUS':>5}  ZUSTAND"]
                     for channel, measurement in chip_measurements:
                         pin_label = pin_map.get(channel, f"CH{channel}")
                         status_text = "OK " if measurement["in_tolerance"] else "NOK"
