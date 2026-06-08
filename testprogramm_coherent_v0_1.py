@@ -555,47 +555,70 @@ class TestprogrammApp:
     def add_mcp_voltage_panel(self):
         self._init_mcp_readers()
 
-        panel = tk.Frame(self.main_frame, bg="#f8fbff", highlightbackground="#b8c7d9", highlightthickness=1)
-        panel.pack(fill="x", padx=8, pady=(6, 10))
+        panel = tk.Frame(self.main_frame, bg="white")
+        panel.pack(fill="both", expand=True, padx=10, pady=(6, 10))
 
         tk.Label(
             panel,
-            text=f"Sollwert: {MCP3008_TARGET_DISPLAY_VOLTS:.2f} V  |  Toleranz ±{MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT:.1f}%",
-            font=("Arial", 14, "bold"),
-            fg="#264b73",
-            bg="#f8fbff",
-        ).pack(pady=(8, 6))
+            text="X2 Spannungsübersicht",
+            font=("Arial", 24, "bold"),
+            fg="#0b3d91",
+            bg="white",
+        ).pack(pady=(4, 10))
 
-        values_frame = tk.Frame(panel, bg="#f8fbff")
-        values_frame.pack(fill="x", padx=8, pady=(0, 4))
-        values_frame.columnconfigure(0, weight=1)
+        values_frame = tk.Frame(panel, bg="white")
+        values_frame.pack(fill="both", expand=True, padx=2, pady=(0, 8))
+        values_frame.columnconfigure(0, weight=1, uniform="mcp")
+        values_frame.columnconfigure(1, weight=1, uniform="mcp")
 
         self.mcp_data_labels = []
-        for idx in range(len(MCP3008_SELECT_PINS)):
-            label = tk.Label(
+        for idx, title in enumerate(("LINKE SEITE  |  PIN 1 - 6", "RECHTE SEITE  |  PIN 7 - 12")):
+            card = tk.Frame(
                 values_frame,
-                text="Messung läuft...",
-                font=("Courier New", 13, "bold"),
+                bg="#f8fbff",
+                highlightbackground="#b8c7d9",
+                highlightthickness=2,
+            )
+            card.grid(row=0, column=idx, sticky="nsew", padx=6, pady=4)
+
+            tk.Label(
+                card,
+                text=title,
+                font=("Arial", 18, "bold"),
+                fg="#0b3d91",
+                bg="#f8fbff",
+            ).pack(fill="x", padx=12, pady=(12, 8))
+
+            label = tk.Label(
+                card,
+                text=f"{'PIN':<8}{'SPANNUNG':>12}{'STATUS':>12}\n\nMessung läuft...",
+                font=("Courier New", 18, "bold"),
                 fg="#1d2a3a",
                 bg="#eef4fb",
                 justify="left",
                 anchor="nw",
-                padx=10,
-                pady=8,
-                relief="groove",
-                bd=1,
+                padx=18,
+                pady=16,
             )
-            label.grid(row=idx, column=0, sticky="ew", padx=6, pady=3)
+            label.pack(fill="both", expand=True, padx=12, pady=(0, 12))
             self.mcp_data_labels.append(label)
 
         self.mcp_status_label = tk.Label(
             panel,
             text="Prüfung wird vorbereitet...",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 18, "bold"),
             fg="#1d2a3a",
-            bg="#f8fbff",
+            bg="white",
         )
-        self.mcp_status_label.pack(pady=(4, 8))
+        self.mcp_status_label.pack(pady=(2, 8))
+
+        tk.Label(
+            panel,
+            text=f"Sollwert: {MCP3008_TARGET_DISPLAY_VOLTS:.2f} V   |   Toleranz: ±{MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT:.1f}%",
+            font=("Arial", 16, "bold"),
+            fg="#264b73",
+            bg="white",
+        ).pack(pady=(0, 2))
 
         self.update_mcp_voltage_panel()
 
@@ -666,6 +689,26 @@ class TestprogrammApp:
         self.mcp_smoothed_raw_values[key] = smoothed
         return smoothed
 
+    def _get_pin_number_from_label(self, pin_label: str):
+        parts = pin_label.split()
+        for index, part in enumerate(parts):
+            if part == "PIN" and index + 1 < len(parts):
+                try:
+                    return int(parts[index + 1])
+                except ValueError:
+                    return None
+        return None
+
+    def _get_measurement_status_text(self, measurement):
+        input_state = measurement.get("input_state")
+        if input_state == "GND":
+            return "GND/0V"
+        if input_state == "OFFEN":
+            return "NC"
+        if input_state == "24V":
+            return "HIGH"
+        return "UNKLAR"
+
     def _collect_mcp_measurements(self):
         if self.mcp_error_message is not None or not self.mcp_readers:
             return None
@@ -707,22 +750,33 @@ class TestprogrammApp:
             try:
                 measurements = self._collect_mcp_measurements()
                 overall_voltage_pass = True
+                measurements_by_pin = {}
                 for idx, chip_measurements in enumerate(measurements or []):
                     pin_map = (
                         MCP3008_CHANNEL_PIN_LABELS[idx]
                         if idx < len(MCP3008_CHANNEL_PIN_LABELS)
                         else {}
                     )
-                    lines = [f"{'PIN':<12}  {'SPANNUNG':>9}  {'STATUS':>5}  ZUSTAND"]
                     for channel, measurement in chip_measurements:
                         pin_label = pin_map.get(channel, f"CH{channel}")
-                        status_text = "OK " if measurement["in_tolerance"] else "NOK"
-                        lines.append(
-                            f"{pin_label:<12}  {measurement['display_voltage']:>7.2f} V  {status_text:<5}  {measurement['input_state']}"
-                        )
+                        pin_number = self._get_pin_number_from_label(pin_label)
+                        if pin_number is not None:
+                            measurements_by_pin[pin_number] = measurement
                         if measurement["has_target"] and not measurement["in_tolerance"]:
                             overall_voltage_pass = False
-                    self.mcp_data_labels[idx].config(text="\n".join(lines), fg="#1d2a3a")
+
+                for label_index, pin_numbers in enumerate((range(1, 7), range(7, 13))):
+                    lines = [f"{'PIN':<8}{'SPANNUNG':>12}{'STATUS':>12}"]
+                    for pin_number in pin_numbers:
+                        measurement = measurements_by_pin.get(pin_number)
+                        if measurement is None:
+                            lines.append(f"{f'PIN {pin_number}':<8}{'--.-- V':>12}{'---':>12}")
+                            continue
+                        status_text = self._get_measurement_status_text(measurement)
+                        lines.append(
+                            f"{f'PIN {pin_number}':<8}{f'{measurement['display_voltage']:.2f} V':>12}{status_text:>12}"
+                        )
+                    self.mcp_data_labels[label_index].config(text="\n".join(lines), fg="#1d2a3a")
 
                 if self.mcp_status_label:
                     status_text = "PASS" if overall_voltage_pass else "FAIL"
