@@ -108,6 +108,7 @@ WIFI_DOT = (29, 35, 35, 41)
 USER_BADGE_SPACING = 28
 # Max text width (px) for question labels, tuned for 3.5" (480 px wide) display.
 QUESTION_WRAPLENGTH = 450
+MCP3008_TABLE_HEADER = f"{'PIN':<8}{'SPANNUNG':>12}{'STATUS':>12}"
 
 
 class TestprogrammApp:
@@ -572,7 +573,7 @@ class TestprogrammApp:
         values_frame.columnconfigure(1, weight=1, uniform="mcp")
 
         self.mcp_data_labels = []
-        for idx, title in enumerate(("LINKE SEITE  |  PIN 1 - 6", "RECHTE SEITE  |  PIN 7 - 12")):
+        for idx, title in enumerate(("LINKE SEITE | PIN 1 - 6", "RECHTE SEITE | PIN 7 - 12")):
             card = tk.Frame(
                 values_frame,
                 bg="#f8fbff",
@@ -591,7 +592,7 @@ class TestprogrammApp:
 
             label = tk.Label(
                 card,
-                text=f"{'PIN':<8}{'SPANNUNG':>12}{'STATUS':>12}\n\nMessung läuft...",
+                text=f"{MCP3008_TABLE_HEADER}\n\nMessung läuft...",
                 font=("Courier New", 18, "bold"),
                 fg="#1d2a3a",
                 bg="#eef4fb",
@@ -766,7 +767,7 @@ class TestprogrammApp:
                             overall_voltage_pass = False
 
                 for label_index, pin_numbers in enumerate((range(1, 7), range(7, 13))):
-                    lines = [f"{'PIN':<8}{'SPANNUNG':>12}{'STATUS':>12}"]
+                    lines = [MCP3008_TABLE_HEADER]
                     for pin_number in pin_numbers:
                         measurement = measurements_by_pin.get(pin_number)
                         if measurement is None:
