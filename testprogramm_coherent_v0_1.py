@@ -205,6 +205,7 @@ class TestprogrammApp:
         self.mcp_smoothed_raw_values = {}
         self.mcp_status_label = None
         self.gpio20_status_label = None
+        self.gpio20_error_message = None
 
     def add_wifi_icon(self):
         self.wifi_canvas = tk.Canvas(
@@ -542,7 +543,7 @@ class TestprogrammApp:
         try:
             self.gpio20_output.on()
             if self.gpio20_status_label:
-                self.gpio20_status_label.config(text="GPIO 20 ist jetzt HIGH.", fg="green")
+                self.gpio20_status_label.config(text="GPIO 20 ist jetzt HIGH (bis Programmende).", fg="green")
         except Exception as exc:
             if self.gpio20_status_label:
                 self.gpio20_status_label.config(text=f"GPIO 20 konnte nicht gesetzt werden: {exc}", fg="red")
@@ -918,7 +919,7 @@ class TestprogrammApp:
 
         tk.Label(
             self.main_frame,
-            text="X2 I/0 Test",
+            text="X2 I/O Test",
             font=("Arial", 22, "bold"),
             fg="#0b3d91",
             bg="white",
