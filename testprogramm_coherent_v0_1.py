@@ -14,10 +14,10 @@ except Exception as exc:
 
 try:
     from gpiozero import OutputDevice as GPIOZERO_OutputDevice
-    GPIO20_IMPORT_ERROR = None
+    GPIO_OUTPUT_DEVICE_IMPORT_ERROR = None
 except Exception as exc:
     GPIOZERO_OutputDevice = None
-    GPIO20_IMPORT_ERROR = exc
+    GPIO_OUTPUT_DEVICE_IMPORT_ERROR = exc
 
 APP_NAME = "Testprogramm Coherent V0.1"
 TITLE_TEXT = "Coherent Belp"
@@ -61,7 +61,8 @@ MCP3008_SMOOTHING_ALPHA_RISE = 0.55
 MCP3008_SMOOTHING_ALPHA_FALL = 0.80
 MCP3008_SMOOTHING_DEADBAND_RAW = 0.6
 # Zustandsfenster aus Messwerten:
-# <=0.012 V ADC: GND angeschlossen (inkl. kleiner Restspannung wie ~0.14 V am Eingang)
+# <=0.012 V ADC am MCP3008-Eingang: GND/LOW-Zustand
+# (entspricht einem niedrigen Spannungsbereich auf X2 nach Teiler)
 # <=0.030 V ADC: Eingang offen / kein Signal
 # 1.45-1.85 V ADC: entspricht 24 V Eingang nach Teiler/Kalibration
 MCP3008_STATE_GND_ADC_MAX = 0.012
@@ -145,7 +146,7 @@ class TestprogrammApp:
         self.internet_test_running = False
         self.monitor_lock = threading.Lock()
         self.internet_test_lock = threading.Lock()
-        self.test_start_time: datetime | None = None
+        self.test_start_time: datetime | None = datetime.now()
         self.question_answers: list[str] = []
         self.mcp_data_labels: list[tk.Label] = []
         self.mcp_after_id = None
@@ -164,7 +165,6 @@ class TestprogrammApp:
         self.gpio20_error_message = None
         self.gpio16_error_message = None
 
-        self.test_start_time = datetime.now()
         self.show_voltage_test_screen()
         self.start_connection_monitor()
 
@@ -530,7 +530,7 @@ class TestprogrammApp:
         if self.gpio20_output is not None:
             return
         if GPIOZERO_OutputDevice is None:
-            self.gpio20_error_message = f"GPIO 20 nicht verfügbar: {GPIO20_IMPORT_ERROR}"
+            self.gpio20_error_message = f"GPIO 20 nicht verfügbar: {GPIO_OUTPUT_DEVICE_IMPORT_ERROR}"
             return
 
         try:
@@ -566,7 +566,7 @@ class TestprogrammApp:
         if self.gpio16_output is not None:
             return
         if GPIOZERO_OutputDevice is None:
-            self.gpio16_error_message = f"GPIO 16 nicht verfügbar: {GPIO20_IMPORT_ERROR}"
+            self.gpio16_error_message = f"GPIO 16 nicht verfügbar: {GPIO_OUTPUT_DEVICE_IMPORT_ERROR}"
             return
 
         try:
@@ -663,6 +663,7 @@ class TestprogrammApp:
 
     def _get_mcp_channel_measurement(self, chip_index: int, channel: int, avg_raw: float):
         adc_voltage = avg_raw * MCP3008_VOLTS_PER_BIT
+        # Niedrige ADC-Werte werden als GND/LOW interpretiert.
         if adc_voltage <= MCP3008_STATE_GND_ADC_MAX:
             input_state = "GND"
         elif adc_voltage <= MCP3008_STATE_OPEN_ADC_MAX:
