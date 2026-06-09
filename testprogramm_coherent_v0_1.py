@@ -102,15 +102,19 @@ SOFT_SPI_MOSI_PIN = 26
 MCP3008_SELECT_PINS = [5, 6]
 GPIO20_OUTPUT_PIN = 20
 GPIO16_OUTPUT_PIN = 16
-WIFI_ICON_X_OFFSET = -15
-WIFI_ICON_Y_OFFSET = 10
-WIFI_ICON_SIZE = (64, 48)
-WIFI_ARCS = [(8, 8, 56, 56), (16, 16, 48, 48), (24, 24, 40, 40)]
-WIFI_DOT = (29, 35, 35, 41)
+WIFI_ICON_X_OFFSET = -8
+WIFI_ICON_Y_OFFSET = 6
+# 3.5" IPS display: 480 x 320 pixels.
+DISPLAY_WIDTH = 480
+DISPLAY_HEIGHT = 320
 USER_BADGE_SPACING = 28
-# Max text width (px) for question labels, tuned for 3.5" (480 px wide) display.
+# Max text width (px) for question labels – fits a 480 px wide screen with side margins.
 QUESTION_WRAPLENGTH = 450
-MCP3008_TABLE_HEADER = f"{'I/O':<8}{'SPANNUNG':>12}{'STATUS':>12}"
+# WiFi icon sized for compact 480 x 320 header bar.
+WIFI_ICON_SIZE = (40, 28)
+WIFI_ARCS = [(5, 3, 35, 25), (9, 6, 31, 22), (13, 9, 27, 19)]
+WIFI_DOT = (17, 17, 23, 23)
+MCP3008_TABLE_HEADER = f"{'I/O':<6}{'SPANNUNG':>10}{'STATUS':>10}"
 
 
 class TestprogrammApp:
@@ -602,10 +606,10 @@ class TestprogrammApp:
         self._init_mcp_readers()
 
         panel = tk.Frame(self.main_frame, bg="white")
-        panel.pack(fill="both", expand=True, padx=10, pady=(6, 10))
+        panel.pack(fill="both", expand=True, padx=4, pady=(2, 4))
 
         values_frame = tk.Frame(panel, bg="white")
-        values_frame.pack(fill="both", expand=True, padx=2, pady=(4, 8))
+        values_frame.pack(fill="both", expand=True, padx=2, pady=(2, 4))
         values_frame.columnconfigure(0, weight=1, uniform="mcp")
         values_frame.columnconfigure(1, weight=1, uniform="mcp")
 
@@ -615,40 +619,40 @@ class TestprogrammApp:
                 values_frame,
                 bg="#f8fbff",
                 highlightbackground="#b8c7d9",
-                highlightthickness=2,
+                highlightthickness=1,
             )
-            card.grid(row=0, column=idx, sticky="nsew", padx=6, pady=4)
+            card.grid(row=0, column=idx, sticky="nsew", padx=3, pady=2)
 
             label = tk.Label(
                 card,
                 text=f"{MCP3008_TABLE_HEADER}\n\nMessung läuft...",
-                font=("Courier New", 18, "bold"),
+                font=("Courier New", 10, "bold"),
                 fg="#1d2a3a",
                 bg="#eef4fb",
                 justify="left",
                 anchor="nw",
-                padx=18,
-                pady=16,
+                padx=6,
+                pady=4,
             )
-            label.pack(fill="both", expand=True, padx=12, pady=12)
+            label.pack(fill="both", expand=True, padx=4, pady=4)
             self.mcp_data_labels.append(label)
 
         self.mcp_status_label = tk.Label(
             panel,
             text="Prüfung wird vorbereitet...",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 11, "bold"),
             fg="#1d2a3a",
             bg="white",
         )
-        self.mcp_status_label.pack(pady=(2, 8))
+        self.mcp_status_label.pack(pady=(1, 2))
 
         tk.Label(
             panel,
             text=f"Sollwert: {MCP3008_TARGET_DISPLAY_VOLTS:.2f} V   |   Toleranz: ±{MCP3008_TARGET_DISPLAY_TOLERANCE_PERCENT:.1f}%",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 9, "bold"),
             fg="#264b73",
             bg="white",
-        ).pack(pady=(0, 2))
+        ).pack(pady=(0, 1))
 
         self.update_mcp_voltage_panel()
 
@@ -967,7 +971,7 @@ class TestprogrammApp:
         self.clear_screen()
 
         header = tk.Frame(self.main_frame, bg="white")
-        header.pack(fill="x", padx=4, pady=2)
+        header.pack(fill="x", padx=4, pady=1)
         header.columnconfigure(0, weight=1)
         header.columnconfigure(1, weight=1)
         header.columnconfigure(2, weight=0)
@@ -975,7 +979,7 @@ class TestprogrammApp:
         self.datetime_label = tk.Label(
             header,
             text="",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 10, "bold"),
             fg="black",
             bg="white",
             anchor="w",
@@ -987,7 +991,7 @@ class TestprogrammApp:
         tk.Label(
             header,
             text=f"User: {selected_user_text}",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 10, "bold"),
             fg="black",
             bg="white",
             anchor="center",
@@ -1006,31 +1010,31 @@ class TestprogrammApp:
         tk.Label(
             self.main_frame,
             text="X2 I/O Test",
-            font=("Arial", 22, "bold"),
+            font=("Arial", 14, "bold"),
             fg="#0b3d91",
             bg="white",
             anchor="center",
             justify="center",
-        ).pack(fill="x", pady=(8, 2))
+        ).pack(fill="x", pady=(2, 0))
 
         self.add_mcp_voltage_panel()
 
         gpio_frame = tk.Frame(self.main_frame, bg="white")
-        gpio_frame.pack(fill="x", pady=(4, 2))
+        gpio_frame.pack(fill="x", pady=(2, 1))
         gpio_frame.columnconfigure(0, weight=1)
         gpio_frame.columnconfigure(1, weight=1)
 
         gpio16_frame = tk.Frame(gpio_frame, bg="white")
-        gpio16_frame.grid(row=0, column=0, padx=6, sticky="n")
+        gpio16_frame.grid(row=0, column=0, padx=4, sticky="n")
 
         self.gpio16_button = tk.Button(
             gpio16_frame,
             text="GPIO 16 HIGH",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 11, "bold"),
             bg="#fff2cc",
             activebackground="#ffe599",
-            padx=12,
-            pady=6,
+            padx=8,
+            pady=4,
             command=self.set_gpio16_high,
         )
         self.gpio16_button.pack()
@@ -1038,23 +1042,23 @@ class TestprogrammApp:
         self.gpio16_status_label = tk.Label(
             gpio16_frame,
             text="",
-            font=("Arial", 12, "bold"),
+            font=("Arial", 9, "bold"),
             fg="#1d2a3a",
             bg="white",
         )
-        self.gpio16_status_label.pack(pady=(6, 0))
+        self.gpio16_status_label.pack(pady=(2, 0))
 
         gpio20_frame = tk.Frame(gpio_frame, bg="white")
-        gpio20_frame.grid(row=0, column=1, padx=6, sticky="n")
+        gpio20_frame.grid(row=0, column=1, padx=4, sticky="n")
 
         self.gpio20_button = tk.Button(
             gpio20_frame,
             text="GPIO 20 HIGH",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 11, "bold"),
             bg="#fff2cc",
             activebackground="#ffe599",
-            padx=12,
-            pady=6,
+            padx=8,
+            pady=4,
             command=self.set_gpio20_high,
         )
         self.gpio20_button.pack()
@@ -1062,22 +1066,22 @@ class TestprogrammApp:
         self.gpio20_status_label = tk.Label(
             gpio20_frame,
             text="",
-            font=("Arial", 12, "bold"),
+            font=("Arial", 9, "bold"),
             fg="#1d2a3a",
             bg="white",
         )
-        self.gpio20_status_label.pack(pady=(6, 0))
+        self.gpio20_status_label.pack(pady=(2, 0))
 
         tk.Button(
             self.main_frame,
             text="Weiter zum Gesamtergebnis",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 11, "bold"),
             bg="#d8ebff",
             activebackground="#c3defa",
-            padx=14,
-            pady=6,
+            padx=10,
+            pady=4,
             command=self.finish_voltage_test,
-        ).pack(pady=(6, 8))
+        ).pack(pady=(4, 6))
 
     def finish_voltage_test(self):
         voltage_result, voltage_lines = self._evaluate_voltage_test()
