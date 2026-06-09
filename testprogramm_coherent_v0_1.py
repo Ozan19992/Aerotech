@@ -108,7 +108,7 @@ WIFI_DOT = (29, 35, 35, 41)
 USER_BADGE_SPACING = 28
 # Max text width (px) for question labels, tuned for 3.5" (480 px wide) display.
 QUESTION_WRAPLENGTH = 450
-MCP3008_TABLE_HEADER = f"{'PIN':<8}{'SPANNUNG':>12}{'STATUS':>12}"
+MCP3008_TABLE_HEADER = f"{'I/O':<8}{'SPANNUNG':>12}{'STATUS':>12}"
 
 
 class TestprogrammApp:
@@ -559,21 +559,13 @@ class TestprogrammApp:
         panel = tk.Frame(self.main_frame, bg="white")
         panel.pack(fill="both", expand=True, padx=10, pady=(6, 10))
 
-        tk.Label(
-            panel,
-            text="X2 Spannungsübersicht",
-            font=("Arial", 24, "bold"),
-            fg="#0b3d91",
-            bg="white",
-        ).pack(pady=(4, 10))
-
         values_frame = tk.Frame(panel, bg="white")
-        values_frame.pack(fill="both", expand=True, padx=2, pady=(0, 8))
+        values_frame.pack(fill="both", expand=True, padx=2, pady=(4, 8))
         values_frame.columnconfigure(0, weight=1, uniform="mcp")
         values_frame.columnconfigure(1, weight=1, uniform="mcp")
 
         self.mcp_data_labels = []
-        for idx, title in enumerate(("LINKE SEITE | PIN 1 - 6", "RECHTE SEITE | PIN 7 - 12")):
+        for idx in range(2):
             card = tk.Frame(
                 values_frame,
                 bg="#f8fbff",
@@ -581,14 +573,6 @@ class TestprogrammApp:
                 highlightthickness=2,
             )
             card.grid(row=0, column=idx, sticky="nsew", padx=6, pady=4)
-
-            tk.Label(
-                card,
-                text=title,
-                font=("Arial", 18, "bold"),
-                fg="#0b3d91",
-                bg="#f8fbff",
-            ).pack(fill="x", padx=12, pady=(12, 8))
 
             label = tk.Label(
                 card,
@@ -601,7 +585,7 @@ class TestprogrammApp:
                 padx=18,
                 pady=16,
             )
-            label.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+            label.pack(fill="both", expand=True, padx=12, pady=12)
             self.mcp_data_labels.append(label)
 
         self.mcp_status_label = tk.Label(
@@ -771,11 +755,11 @@ class TestprogrammApp:
                     for pin_number in pin_numbers:
                         measurement = measurements_by_pin.get(pin_number)
                         if measurement is None:
-                            lines.append(f"{f'PIN {pin_number}':<8}{'--.-- V':>12}{'---':>12}")
+                            lines.append(f"{f'I/O {pin_number}':<8}{'--.-- V':>12}{'---':>12}")
                             continue
                         status_text = self._get_measurement_status_text(measurement)
                         lines.append(
-                            f"{f'PIN {pin_number}':<8}{f'{measurement['display_voltage']:.2f} V':>12}{status_text:>12}"
+                            f"{f'I/O {pin_number}':<8}{f'{measurement['display_voltage']:.2f} V':>12}{status_text:>12}"
                         )
                     self.mcp_data_labels[label_index].config(text="\n".join(lines), fg="#1d2a3a")
 
