@@ -61,10 +61,10 @@ MCP3008_SMOOTHING_ALPHA_RISE = 0.55
 MCP3008_SMOOTHING_ALPHA_FALL = 0.80
 MCP3008_SMOOTHING_DEADBAND_RAW = 0.6
 # Zustandsfenster aus Messwerten:
-# <=0.006 V ADC: GND angeschlossen
+# <=0.012 V ADC: GND angeschlossen (inkl. kleiner Restspannung wie ~0.14 V am Eingang)
 # <=0.030 V ADC: Eingang offen / kein Signal
 # 1.45-1.85 V ADC: entspricht 24 V Eingang nach Teiler/Kalibration
-MCP3008_STATE_GND_ADC_MAX = 0.006
+MCP3008_STATE_GND_ADC_MAX = 0.012
 MCP3008_STATE_OPEN_ADC_MAX = 0.030
 MCP3008_STATE_24V_ADC_MIN = 1.45
 MCP3008_STATE_24V_ADC_MAX = 1.85
@@ -100,6 +100,7 @@ SOFT_SPI_MISO_PIN = 19
 SOFT_SPI_MOSI_PIN = 26
 MCP3008_SELECT_PINS = [5, 6]
 GPIO20_OUTPUT_PIN = 20
+GPIO16_OUTPUT_PIN = 16
 WIFI_ICON_X_OFFSET = -15
 WIFI_ICON_Y_OFFSET = 10
 WIFI_ICON_SIZE = (64, 48)
@@ -155,11 +156,16 @@ class TestprogrammApp:
         self.voltage_test_result: str | None = None
         self.voltage_test_lines: list[str] = []
         self.gpio20_output = None
+        self.gpio16_output = None
         self.gpio20_button = None
+        self.gpio16_button = None
         self.gpio20_status_label = None
+        self.gpio16_status_label = None
         self.gpio20_error_message = None
+        self.gpio16_error_message = None
 
-        self.show_start_screen()
+        self.test_start_time = datetime.now()
+        self.show_voltage_test_screen()
         self.start_connection_monitor()
 
     def clear_screen(self):
@@ -207,8 +213,11 @@ class TestprogrammApp:
         self.mcp_smoothed_raw_values = {}
         self.mcp_status_label = None
         self.gpio20_button = None
+        self.gpio16_button = None
         self.gpio20_status_label = None
+        self.gpio16_status_label = None
         self.gpio20_error_message = None
+        self.gpio16_error_message = None
 
     def add_wifi_icon(self):
         self.wifi_canvas = tk.Canvas(
@@ -552,6 +561,42 @@ class TestprogrammApp:
         except Exception as exc:
             if self.gpio20_status_label:
                 self.gpio20_status_label.config(text=f"GPIO 20 konnte nicht gesetzt werden: {exc}", fg="red")
+
+    def _init_gpio16_output(self):
+        if self.gpio16_output is not None:
+            return
+        if GPIOZERO_OutputDevice is None:
+            self.gpio16_error_message = f"GPIO 16 nicht verfügbar: {GPIO20_IMPORT_ERROR}"
+            return
+
+        try:
+            self.gpio16_output = GPIOZERO_OutputDevice(GPIO16_OUTPUT_PIN, active_high=True, initial_value=False)
+            self.gpio16_error_message = None
+        except Exception as exc:
+            self.gpio16_error_message = f"GPIO 16 Initialisierung fehlgeschlagen: {exc}"
+
+    def set_gpio16_high(self):
+        self._init_gpio16_output()
+
+        if self.gpio16_error_message is not None:
+            if self.gpio16_status_label:
+                self.gpio16_status_label.config(text=self.gpio16_error_message, fg="red")
+            return
+
+        if self.gpio16_output is None:
+            if self.gpio16_status_label:
+                self.gpio16_status_label.config(text="GPIO 16 konnte nicht initialisiert werden.", fg="red")
+            return
+
+        try:
+            self.gpio16_output.on()
+            if self.gpio16_button:
+                self.gpio16_button.config(state="disabled")
+            if self.gpio16_status_label:
+                self.gpio16_status_label.config(text="GPIO 16 ist jetzt HIGH (bis Programmende).", fg="green")
+        except Exception as exc:
+            if self.gpio16_status_label:
+                self.gpio16_status_label.config(text=f"GPIO 16 konnte nicht gesetzt werden: {exc}", fg="red")
 
     def add_mcp_voltage_panel(self):
         self._init_mcp_readers()
@@ -969,17 +1014,46 @@ class TestprogrammApp:
 
         self.add_mcp_voltage_panel()
 
-        gpio20_frame = tk.Frame(self.main_frame, bg="white")
-        gpio20_frame.pack(fill="x", pady=(4, 2))
+        gpio_frame = tk.Frame(self.main_frame, bg="white")
+        gpio_frame.pack(fill="x", pady=(4, 2))
+        gpio_frame.columnconfigure(0, weight=1)
+        gpio_frame.columnconfigure(1, weight=1)
+
+        gpio16_frame = tk.Frame(gpio_frame, bg="white")
+        gpio16_frame.grid(row=0, column=0, padx=6, sticky="n")
+
+        self.gpio16_button = tk.Button(
+            gpio16_frame,
+            text="GPIO 16 HIGH",
+            font=("Arial", 16, "bold"),
+            bg="#fff2cc",
+            activebackground="#ffe599",
+            padx=12,
+            pady=6,
+            command=self.set_gpio16_high,
+        )
+        self.gpio16_button.pack()
+
+        self.gpio16_status_label = tk.Label(
+            gpio16_frame,
+            text="",
+            font=("Arial", 12, "bold"),
+            fg="#1d2a3a",
+            bg="white",
+        )
+        self.gpio16_status_label.pack(pady=(6, 0))
+
+        gpio20_frame = tk.Frame(gpio_frame, bg="white")
+        gpio20_frame.grid(row=0, column=1, padx=6, sticky="n")
 
         self.gpio20_button = tk.Button(
             gpio20_frame,
             text="GPIO 20 HIGH",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 16, "bold"),
             bg="#fff2cc",
             activebackground="#ffe599",
-            padx=16,
-            pady=8,
+            padx=12,
+            pady=6,
             command=self.set_gpio20_high,
         )
         self.gpio20_button.pack()
@@ -987,7 +1061,7 @@ class TestprogrammApp:
         self.gpio20_status_label = tk.Label(
             gpio20_frame,
             text="",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 12, "bold"),
             fg="#1d2a3a",
             bg="white",
         )
@@ -996,13 +1070,13 @@ class TestprogrammApp:
         tk.Button(
             self.main_frame,
             text="Weiter zum Gesamtergebnis",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 16, "bold"),
             bg="#d8ebff",
             activebackground="#c3defa",
-            padx=16,
-            pady=8,
+            padx=14,
+            pady=6,
             command=self.finish_voltage_test,
-        ).pack(pady=(6, 10))
+        ).pack(pady=(6, 8))
 
     def finish_voltage_test(self):
         voltage_result, voltage_lines = self._evaluate_voltage_test()
@@ -1113,6 +1187,16 @@ class TestprogrammApp:
             except Exception:
                 pass
             self.gpio20_output = None
+        if self.gpio16_output is not None:
+            try:
+                self.gpio16_output.off()
+            except Exception:
+                pass
+            try:
+                self.gpio16_output.close()
+            except Exception:
+                pass
+            self.gpio16_output = None
         self.clear_screen()
         self.root.destroy()
 
